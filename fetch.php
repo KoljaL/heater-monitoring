@@ -67,6 +67,7 @@ function fetchValues($esp, $startDate, $endDate)
         // loop over every sensor from $config
         foreach ($sensors as $key => $value) {
           $series[$key]['name']= $value['title'];
+          $series[$key]['chartType'] = ($value['value'] === 'degree') ? 'line' : 'area';
           $series[$key]['data'][]= $row[$value['name']];
         }
     }

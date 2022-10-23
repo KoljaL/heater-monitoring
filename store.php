@@ -15,20 +15,24 @@ unset($_GET['ESP']);
 
 
 // delete db file & connect to database
-// unlink($config['db_file']);
+unlink($config['db_file']);
 $db = new SQLite3($config['db_file']);
 
 // initialize database
-// initDB($esp);
+initDB($esp);
 // insertValues($esp);
 
-// dummyData();
+dummyData(21);
+dummyData(22);
+dummyData(23);
+dummyData(24);
+dummyData(25);
 
 
-function dummyData() {
+function dummyData($day) {
   global $db, $esp;
   // hours
-  for ($h = 0; $h <= 24; $h++) {
+  for ($h = 0; $h < 24; $h++) {
     if ($h < 10) {
       $h = "0" . $h;
     }
@@ -39,7 +43,7 @@ function dummyData() {
       }
       // OUTPUT 
       // echo "Date:" . $h . ":" . $m . "<br>";
-      $date = "'2022-10-22 " . $h . ":" . $m . ":00'";
+      $date = "'2022-10-".$day.' '. $h . ":" . $m . ":00'";
       $temp_1 = "'" . rand(10, 20) . "'";
       $temp_2 = "'" . rand(20, 30) . "'";
       $hum_1 = "'" . rand(50, 60) . "'";
