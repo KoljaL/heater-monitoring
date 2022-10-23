@@ -32,17 +32,19 @@ fetchValues($esp);
 function fetchValues($esp)
 {
     global $db;
-    $res = $db->query("SELECT * FROM $esp");
-    $result = [];
+
+    $stmt = $db->prepare("SELECT * FROM $esp WHERE strftime('%Y-%m-%d %H:%M:S', date) BETWEEN  :startDate AND :endDate");
+    $stmt->bindValue('startDate', '2022-10-23 08:00:15', SQLITE3_TEXT);
+    $stmt->bindValue('endDate', '2022-10-23 09:00:15', SQLITE3_TEXT);
+
+
+    $res = $stmt->execute();
+
     while ($row = $res->fetchArray()) {
-      $result[] = $row;
-        // echo "{$row[0]} {$row[1]} {$row[2]}\n";
+        echo "{$row['id']} {$row['date']} {$row['temp_2']} \n";
     }
-    print_r($result);
-
-    // return $result;
-
 }
+
 
 
 /**
