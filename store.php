@@ -22,15 +22,35 @@ $db = new SQLite3($config['db_file']);
 // initDB($esp);
 // insertValues($esp);
 
-
-   $statement = $db->prepare("insert into $esp 
-    ('temp_1', 'temp_2', 'hum_1', 'hum_2','date') 
-    values ('1','2','3','4','2022-20-20')");
-   $statement->execute();
+// dummyData();
 
 
-
-
+function dummyData() {
+  global $db, $esp;
+  // hours
+  for ($h = 0; $h <= 24; $h++) {
+    if ($h < 10) {
+      $h = "0" . $h;
+    }
+    // minutes
+    for ($m = 0; $m < 60; $m += 5) {
+      if ($m < 10) {
+        $m = "0" . $m;
+      }
+      // OUTPUT 
+      // echo "Date:" . $h . ":" . $m . "<br>";
+      $date = "'2022-10-22 " . $h . ":" . $m . ":00'";
+      $temp_1 = "'" . rand(10, 20) . "'";
+      $temp_2 = "'" . rand(20, 30) . "'";
+      $hum_1 = "'" . rand(50, 60) . "'";
+      $hum_2 = "'" . rand(70, 80) . "'";
+      // insert into DB
+      $statement = $db->prepare("insert into $esp ('temp_1', 'temp_2', 'hum_1', 'hum_2','date')  values ($temp_1, $temp_2, $hum_1, $hum_2,$date)");
+      $statement->execute();
+      // OUTPUT
+    } // $m
+  } // $h
+}
 
 
 //////////////////////////////////  FUNCTIONS  //////////////////////////////////
@@ -43,16 +63,15 @@ $db = new SQLite3($config['db_file']);
  * @param string $esp
  * @return void
  */
-function insertValues($esp)
-{
-    global $db;
-    // get all keys and values from URL as two strings
-    $columns = '('.implode(',', array_keys($_GET)).')';
-    $values = '('.implode(',', $_GET).')';
-    // prepare and execute statement
-    $statement = $db->prepare("insert into $esp" .$columns ." values" .$values);
-    $statement->execute();
-} 
+function insertValues($esp) {
+  global $db;
+  // get all keys and values from URL as two strings
+  $columns = '(' . implode(',', array_keys($_GET)) . ')';
+  $values = '(' . implode(',', $_GET) . ')';
+  // prepare and execute statement
+  $statement = $db->prepare("insert into $esp" . $columns . " values" . $values);
+  $statement->execute();
+}
 
 
 
@@ -64,20 +83,19 @@ function insertValues($esp)
  * @param string $esp
  * @param array $sensors
  */
-function initDB($esp)
-{
-    global $db,$config;
+function initDB($esp) {
+  global $db, $config;
 
-    // get all sensors for this ESP from database
-    $sensors = $config['ESP'][$esp]['sensors'];
-    // print_r($sensors);
+  // get all sensors for this ESP from database
+  $sensors = $config['ESP'][$esp]['sensors'];
+  // print_r($sensors);
 
-    $db->exec("CREATE TABLE IF NOT EXISTS  $esp(id INTEGER PRIMARY KEY AUTOINCREMENT)");
-    $db->exec("ALTER TABLE  $esp ADD COLUMN date DATETIME DEFAULT CURRENT_TIMESTAMP ");
-    foreach ($sensors as $sensor) {
-        $sensorName = $sensor['name'];
-        $db->exec("ALTER TABLE  $esp ADD COLUMN $sensorName INTEGER NOT NULL DEFAULT '0' ");
-    }
+  $db->exec("CREATE TABLE IF NOT EXISTS  $esp(id INTEGER PRIMARY KEY AUTOINCREMENT)");
+  $db->exec("ALTER TABLE  $esp ADD COLUMN date DATETIME DEFAULT CURRENT_TIMESTAMP ");
+  foreach ($sensors as $sensor) {
+    $sensorName = $sensor['name'];
+    $db->exec("ALTER TABLE  $esp ADD COLUMN $sensorName INTEGER NOT NULL DEFAULT '0' ");
+  }
 }
 
 
