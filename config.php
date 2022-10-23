@@ -30,6 +30,14 @@ $config = [
           'min' => '10',
           'max' => '100',
         ],
+        [
+          'name' => 'hum_2',
+          'title' => 'rel. Luftfeuchte Küche',
+          'value' => 'percent',
+          'unit' => '%',
+          'min' => '10',
+          'max' => '100',
+        ],
       ],
     ]
   ]

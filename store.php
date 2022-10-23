@@ -7,7 +7,7 @@ include 'config.php';
 
 
 // get ESP name from URL and remove it from GET array
-$esp = ($_GET['ESP']) ? $_GET['ESP'] : 'haus_one';
+$esp = (isset($_GET['ESP'])) ? $_GET['ESP'] : 'haus_one';
 unset($_GET['ESP']);
 // print_r($_GET);
 
@@ -20,30 +20,21 @@ $db = new SQLite3($config['db_file']);
 
 // initialize database
 // initDB($esp);
-insertValues($esp);
-
-fetchValues($esp);
-
-/**
- * fetchValues($esp)
- * @param string $esp
- * @return void
- */
-function fetchValues($esp)
-{
-    global $db;
-
-    $stmt = $db->prepare("SELECT * FROM $esp WHERE strftime('%Y-%m-%d %H:%M:S', date) BETWEEN  :startDate AND :endDate");
-    $stmt->bindValue('startDate', '2022-10-23 08:00:15', SQLITE3_TEXT);
-    $stmt->bindValue('endDate', '2022-10-23 09:00:15', SQLITE3_TEXT);
+// insertValues($esp);
 
 
-    $res = $stmt->execute();
+   $statement = $db->prepare("insert into $esp 
+    ('temp_1', 'temp_2', 'hum_1', 'hum_2','date') 
+    values ('1','2','3','4','2022-20-20')");
+   $statement->execute();
 
-    while ($row = $res->fetchArray()) {
-        echo "{$row['id']} {$row['date']} {$row['temp_2']} \n";
-    }
-}
+
+
+
+
+
+//////////////////////////////////  FUNCTIONS  //////////////////////////////////
+
 
 
 
@@ -61,24 +52,9 @@ function insertValues($esp)
     // prepare and execute statement
     $statement = $db->prepare("insert into $esp" .$columns ." values" .$values);
     $statement->execute();
-}
+} 
 
 
-
-
-
-
-
-
-
-// print_r($esp);
-// print_r($sensors);
-// print_r($config);
-
-
-
-
-//////////////////////////////////  FUNCTIONS  //////////////////////////////////
 
 
 /**
@@ -94,6 +70,7 @@ function initDB($esp)
 
     // get all sensors for this ESP from database
     $sensors = $config['ESP'][$esp]['sensors'];
+    // print_r($sensors);
 
     $db->exec("CREATE TABLE IF NOT EXISTS  $esp(id INTEGER PRIMARY KEY AUTOINCREMENT)");
     $db->exec("ALTER TABLE  $esp ADD COLUMN date DATETIME DEFAULT CURRENT_TIMESTAMP ");
@@ -118,3 +95,31 @@ function initDB($esp)
 // $firstName = 'Lucy';
 // $lastName = 'Brown';
 // $stm->execute();
+
+
+
+
+
+
+
+// fetchValues($esp);
+// /**
+//  * fetchValues($esp)
+//  * @param string $esp
+//  * @return void
+//  */
+// function fetchValues($esp)
+// {
+//     global $db;
+
+//     $stmt = $db->prepare("SELECT * FROM $esp WHERE strftime('%Y-%m-%d %H:%M:S', date) BETWEEN  :startDate AND :endDate");
+//     $stmt->bindValue('startDate', '2022-10-23 08:00:15', SQLITE3_TEXT);
+//     $stmt->bindValue('endDate', '2022-10-23 09:00:15', SQLITE3_TEXT);
+
+
+//     $res = $stmt->execute();
+
+//     while ($row = $res->fetchArray()) {
+//         echo "{$row['id']} {$row['date']} {$row['temp_2']} \n";
+//     }
+// }
