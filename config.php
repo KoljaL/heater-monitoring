@@ -3,48 +3,55 @@
 $config = [
   'db_file' => 'db.sqlite',
   'ESP' => [
-    'haus_one' =>
-    [
+    'haus_one' => [
+      'axis' => [
+        'Yleft' => [
+          'value' => 'degree',
+          'unit' => '°C',
+          'min' => '0',
+          'max' => '70',
+        ],
+        'Yright' => [
+          'value' => 'percent',
+          'unit' => '%',
+          'min' => '0',
+          'max' => '100',
+        ],
+      ],
       'sensors' => [
         [
           'name' => 'temp_1',
-          'label' => 'Temperatur Wohnzimmer', 
+          'label' => 'Temperatur Wohnzimmer',
+          'yAxisID' => 'Yleft',
           'backgroundColor' => 'red',
           'borderColor' => 'red',
-          'value' => 'degree',
           'unit' => '°C',
-          'min' => '10',
-          'max' => '30',
+
         ],
         [
           'name' => 'temp_2',
-          'label' => 'Temperatur Küche', 
+          'label' => 'Temperatur Küche',
+          'yAxisID' => 'Yleft',
           'backgroundColor' => 'blue',
-          'borderColor' => 'blue',
-          'value' => 'degree',
+          'borderColor' => 'blue', 
           'unit' => '°C',
-          'min' => '10',
-          'max' => '30',
+
         ],
         [
           'name' => 'hum_1',
-          'label' => 'rel. Luftfeuchte Wohnzimmer', 
+          'label' => 'rel. Luftfeuchte Wohnzimmer',
+          'yAxisID' => 'Yright',
           'backgroundColor' => 'green',
-          'borderColor' => 'green',
-          'value' => 'percent',
+          'borderColor' => 'green', 
           'unit' => '%',
-          'min' => '10',
-          'max' => '100',
         ],
         [
           'name' => 'hum_2',
           'label' => 'rel. Luftfeuchte Küche',
+          'yAxisID' => 'Yright',
           'backgroundColor' => 'orange',
-          'borderColor' => 'orange',
-          'value' => 'percent',
+          'borderColor' => 'orange', 
           'unit' => '%',
-          'min' => '10',
-          'max' => '100',
         ],
       ],
     ]

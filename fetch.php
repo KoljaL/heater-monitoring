@@ -63,11 +63,13 @@ function fetchValues($esp, $startDate, $endDate) {
 
   while ($row = $results->fetchArray()) {
     array_push($labels, $row['date']);
+    // array_push($labels, strtotime($row['date']));
   }
 
   foreach ($sensors as $key => $value) {
     $datasets[$key]['label'] = $value['label'];
-    $datasets[$key]['value'] = $value['value'];
+    $datasets[$key]['yAxisID'] = $value['yAxisID'];
+    $datasets[$key]['unit'] = $value['unit'];
     $datasets[$key]['backgroundColor'] = $value['backgroundColor'];
     $datasets[$key]['borderColor'] = $value['borderColor'];
 

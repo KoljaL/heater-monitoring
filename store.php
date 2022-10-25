@@ -41,8 +41,18 @@ function dummyData($day) {
       if ($m < 10) {
         $m = "0" . $m;
       }
+
+      // if (rand(1, 5) > 3) {
+      //   // echo "'2022-10-" . $day . ' ' . $h . ":" . $m . ":00'<br>";
+      //   continue;
+      // }
+
+      if ($h === 12 || $h === 18){
+        continue;
+      }
+
+      
       // OUTPUT 
-      // echo "Date:" . $h . ":" . $m . "<br>";
       $date = "'2022-10-".$day.' '. $h . ":" . $m . ":00'";
       $temp_1 = "'" . rand(10, 20) . "'";
       $temp_2 = "'" . rand(20, 30) . "'";
