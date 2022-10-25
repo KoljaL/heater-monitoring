@@ -10,12 +10,12 @@
   <link rel="shortcut icon"
     href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAABMpJREFUWIXtl3mIVWUYxn/ve5Z7RueOzcw1x1HzuhQ1LpkmqBWOjWmZZZJDEC0qLSQaYVImtNBGC2NlG4L5nxASRRRBC/2hBVpktos5WjNjTGY2jc5yl3Pe/phzm1FnTIgb/tEDB77v+Z7zPc/3nu07cDIUeNz3/clxf53rujPj9mhVfbmPdqnjONfH7VLgpbKysoq4P09V747bs1T1gX68TobruvOAb4CE53kXAz8BSQBV3ayqjwGkUqmkiHQAo+Oxe0XkzcI8ItLouu7cuP254zg39OenJxKe5+0RkSrf98fncrn9qppwXXcSgOM4O4EFAIcPH+4Qkb2e580F8H3/C2BWKpUqhP2soFXVncBVpxWgpKSkDfgziqJUOp3uNLNDZjYMwMwazWx4LI3M7EAYhsPjsRYg0dXVNSju74uiqDDWWGj/IxKJxLnAsjjMSOAuQOIKLAJmAKTT6QC4HwgAXNedBSzsM9UqYHh83u3A2P78nBMroqrXiEhkZl/n8/n2ZDJ5LJvNrgBmJxKJxnw+vx2gra2tSlUnqGqFme2Joqi5urq6paOj4z4zm+N53h9RFG2LK3DUdd36KIpagSMDrl5V75xSMsQmBWXmOM7ymF45pWSILSgbZsCWmBviqrbeVpG2miBpqrom5i84y/FsRWqMAa0A9fX1jog031w+ykTk50I1B8Izj1fV2CNV5xvwEbAaePOOyrRtHjXVgC+A1aq6sbY0ZTZlsX047hITkcZY+9Q4f7A11cw3oD3m1rqIRRdeZwpGfMkKcAdKMm1ied30iVr31fe/w8Ee7rwxpVPrZpRO3XegFf2u5/4NxGFohT92yZVnN/za2szu7T3aksBJLq8/p+FY2wG2vDPwik96Cgq44tJhrF87gmtn9wk1qZzn1o3hloXHa0ePGMQLD57P6pt7ueRglw0PTebRFQObnzLAf4X/A5wZAXzfX+w4zkfATcU2FJFtqvpi4aupQRDMSQ4K3li97Oq6WReOO7339b/AE2tunX7Z1PErjx49uhVAs9nskiULa/XSaTVUDBlcbH+mTZnA7dfPxvecy8vKyio0iqJgUEmi6Ma9EFzHwXddaW9vD1zA3n7/Uz7Z+SVNLYeY4Y8sqv3DDZvJdXfQlckCmJtIJJ7e3/TLqP1NtACVVLGomAF27Pr+RmBT/Ilu1Uwm8yOwH9gN7C2meYy3gFwYhh8Adma8B/4P0B9y+YiOrohsvpcL80Znd0gmd7w2jIyOrpDuTC9nBp1dIV3dpw4w4IakYdPesGETEaB3VPbsHbe+1xJtfa8lBHR+snc/uevbtuisiz4OARnn98z525GMJSe/mwfEPYXPcRVQ1bA9ytEe5lHVJwEfuMd6Ja8Dvud5M/dmjnE4n2FH5xFE5N1YO7mP9hDgp9PppAnRL/luDEIg6i/Iq/RsoyeIyEERaQYuAHAcZylgAqaqG/8uneuuV5FuEfnB9/2JAEEQjAbyAiYi+/osbIOIZFX1+ZhqA1KFiZ4FckDW87xlcVVOvDeC+DiOr62t7a+0fqx1+9OqahMQicifQDnAa+urJ9mdlWkD1lB8dDbXXGmVjm9ANar6Sqk6Foiaqq4qtruItFU6vikSAkMLv1jV8XHin1IxUB57DQX4C43VkIwDmXPyAAAAAElFTkSuQmCC" />
 
-  <script src="https://cdn.jsdelivr.net/npm/@easepick/bundle@1.2.0/dist/index.umd.min.js"></script>
-  <link rel="stylesheet" href="https://uicdn.toast.com/chart/latest/toastui-chart.min.css" />
-  <script src="https://uicdn.toast.com/chart/latest/toastui-chart.min.js"></script>
-
-
-  <!-- <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script> -->
+  <script src="./js/chart.js"></script>
+  <link rel="stylesheet" href="./css/chart.css" />
+  <script src="./js/easepick.js"></script>
+  <link rel="stylesheet" href="./css/easepick.css" />
+  <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vanillajs-datepicker@1.2.0/dist/css/datepicker.min.css"> -->
+  <!-- <script src="https://cdn.jsdelivr.net/npm/vanillajs-datepicker@1.2.0/dist/js/datepicker-full.min.js"></script> -->
   <style>
     header {
       display: flex;
@@ -37,11 +37,12 @@
     }
   </style>
 </head>
+</head>
 
 <body>
   <header>
     <div></div>
-    <input id="datepicker" />
+    <input id="easepickElement" />
 
     <form id="setDate">
       <input type="date" id="startDate" />
@@ -52,57 +53,81 @@
   </header>
   <div id="chart-area"></div>
 
-
   <script>
 
+    // var dateOptions = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'};
+    // var today = new Date();
+    // console.log(today.toLocaleDateString("en-US")); // 9/17/2016
+    // console.log(today.toLocaleDateString("en-US", dateOptions)); // Saturday, September 17, 2016
+    // console.log(today.toLocaleDateString("hi-IN", dateOptions));
 
 
-    const picker = new easepick.create({
-      element: "#datepicker",
-      css: [
-        "https://cdn.jsdelivr.net/npm/@easepick/bundle@1.2.0/dist/index.css"
-      ],
-      zIndex: 10,
-      lang: "de-DE",
-      format: "DD MMM YYYY",
-      plugins: [
-        "AmpPlugin",
-        "RangePlugin"
-      ]
-    })
 
     // ELEMENTS
-    // var chart = ''
-    // const el = document.getElementById('chart-area');
-    // const setDate = document.getElementById('setDate');
-    // const endDate = document.querySelector('#endDate');
-    // const startDate = document.querySelector('#startDate');
+    var chart = ''
+    const el = document.getElementById('chart-area');
+    const setDate = document.getElementById('setDate');
+    const endDate = document.querySelector('#endDate');
+    const startDate = document.querySelector('#startDate');
+    const easepickElement = document.querySelector('#easepickElement');
 
-    // SETTINGS
+    // // SETTINGS
     // setDate.addEventListener('submit', fetchNewData);
-    // startDate.valueAsDate = new Date();
-    // endDate.valueAsDate = new Date();
+    // easepickElement.addEventListener('change', fetchNewData1);
+    startDate.valueAsDate = new Date();
+    endDate.valueAsDate = new Date();
 
 
-
-    // DATEPICKER
-    // const picker = new Litepicker({
-    //   element: document.getElementById('litepicker'),
-    //   format: 'DD.MM.YYYY',
-    //   autoRefresh: true,
-    //   autoApply: false,
-    //   singleMode: false,
-    //   allowRepick: true,
+    // const elem = document.querySelector('#easepickElement');
+    // const datepicker = new Datepicker(elem, {
+    //   // ...options
     // });
 
+    const picker = new easepick.create({
+      element: "#easepickElement",
+      css: ["./css/easepick.css"],
+      zIndex: 1000,
+      lang: "de-DE",
+      date: new Date(),
+      readonly: false,
+      grid: 2,
+      calendars: 4,
+      format: "DD.MM.YYYY",
+      plugins: [
+        // "AmpPlugin",
+        "RangePlugin"
+      ],
+      RangePlugin: {
+        tooltip: true,
+      },
+      setup(picker) {
+        picker.on('select', (e) => {
+          const {view, date, select} = e.detail;
+          console.log(picker.getStartDate())
+        });
+      },
+    })
 
-    // picker.setDateRange(startDate.valueAsDate, startDate.valueAsDate);
+
+
 
     // CHART
-    // fetchFirstData().then(data => {
-    //   console.log(data)
-    //   chart = toastui.Chart.lineChart({el, data, options});
-    // });
+    fetchFirstData().then(data => {
+      console.log(data)
+      chart = toastui.Chart.lineChart({el, data, options});
+    });
+
+
+    async function fetchNewData1(event) {
+      console.log(easepickElement.getStartDate.valueAsDate)
+      event.preventDefault();
+      const response = await fetch(`/fetch.php?startDate=${startDate.value}&endDate=${endDate.value}`);
+      const data = await response.json();
+      console.log(data)
+      chart.setData(data)
+
+    }
+
 
     const options = {
       series: {
