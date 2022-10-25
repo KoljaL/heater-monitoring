@@ -8,7 +8,9 @@ $config = [
       'sensors' => [
         [
           'name' => 'temp_1',
-          'title' => 'Temperatur Wohnzimmer',
+          'label' => 'Temperatur Wohnzimmer', 
+          'backgroundColor' => 'red',
+          'borderColor' => 'red',
           'value' => 'degree',
           'unit' => '°C',
           'min' => '10',
@@ -16,7 +18,9 @@ $config = [
         ],
         [
           'name' => 'temp_2',
-          'title' => 'Temperatur Küche',
+          'label' => 'Temperatur Küche', 
+          'backgroundColor' => 'blue',
+          'borderColor' => 'blue',
           'value' => 'degree',
           'unit' => '°C',
           'min' => '10',
@@ -24,7 +28,9 @@ $config = [
         ],
         [
           'name' => 'hum_1',
-          'title' => 'rel. Luftfeuchte Wohnzimmer',
+          'label' => 'rel. Luftfeuchte Wohnzimmer', 
+          'backgroundColor' => 'green',
+          'borderColor' => 'green',
           'value' => 'percent',
           'unit' => '%',
           'min' => '10',
@@ -32,7 +38,9 @@ $config = [
         ],
         [
           'name' => 'hum_2',
-          'title' => 'rel. Luftfeuchte Küche',
+          'label' => 'rel. Luftfeuchte Küche',
+          'backgroundColor' => 'orange',
+          'borderColor' => 'orange',
           'value' => 'percent',
           'unit' => '%',
           'min' => '10',

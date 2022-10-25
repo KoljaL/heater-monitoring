@@ -12,8 +12,8 @@ $now = new DateTimeImmutable();
 
 // get ESP name from URL and remove it from GET array
 $esp = (isset($_GET['ESP'])) ? $_GET['ESP'] : 'haus_one';
-$startDate = (isset($_GET['startDate'])) ? $_GET['startDate']. ' 00:00:00' : date('Y-m-d', time()).' 00:00:00';
-$endDate = (isset($_GET['endDate'])) ? $_GET['endDate']. ' 23:59:59' : $now->format('Y-m-d H:i:s');
+$startDate = (isset($_GET['startDate'])) ? $_GET['startDate'] . ' 00:00:00' : date('Y-m-d', time()) . ' 00:00:00';
+$endDate = (isset($_GET['endDate'])) ? $_GET['endDate'] . ' 23:59:59' : $now->format('Y-m-d H:i:s');
 
 
 // echo $startDate;
@@ -47,30 +47,35 @@ echo json_encode($res);
  * @param string $esp
  * @return array
  */
-function fetchValues($esp, $startDate, $endDate)
-{
-    global $db,$config;
-    // get current sensors
-    $sensors = $config['ESP'][$esp]['sensors'];
-    // fetch data from DB
-    $stmt = $db->prepare("SELECT * FROM $esp WHERE strftime('%Y-%m-%d %H:%M:S', date) BETWEEN  :startDate AND :endDate");
-    $stmt->bindValue('startDate', $startDate, SQLITE3_TEXT);
-    $stmt->bindValue('endDate', $endDate, SQLITE3_TEXT);
-    $results = $stmt->execute();
+function fetchValues($esp, $startDate, $endDate) {
+  global $db, $config;
+  // get current sensors
+  $sensors = $config['ESP'][$esp]['sensors'];
+  // fetch data from DB
+  $stmt = $db->prepare("SELECT * FROM $esp WHERE strftime('%Y-%m-%d %H:%M:S', date) BETWEEN  :startDate AND :endDate");
+  $stmt->bindValue('startDate', $startDate, SQLITE3_TEXT);
+  $stmt->bindValue('endDate', $endDate, SQLITE3_TEXT);
+  $results = $stmt->execute();
 
-    // prepare output
-    $categories = [];
-    $series = [];
+  // prepare output
+  $labels = [];
+  $datasets = [];
+
+  while ($row = $results->fetchArray()) {
+    array_push($labels, $row['date']);
+  }
+
+  foreach ($sensors as $key => $value) {
+    $datasets[$key]['label'] = $value['label'];
+    $datasets[$key]['value'] = $value['value'];
+    $datasets[$key]['backgroundColor'] = $value['backgroundColor'];
+    $datasets[$key]['borderColor'] = $value['borderColor'];
+
     while ($row = $results->fetchArray()) {
-        // categories are dates
-        array_push($categories,$row['date']);
-        // loop over every sensor from $config
-        foreach ($sensors as $key => $value) {
-          $series[$key]['name']= $value['title'];
-          $series[$key]['chartType'] = ($value['value'] === 'degree') ? 'line' : 'area';
-          $series[$key]['data'][]= $row[$value['name']];
-        }
+      $datasets[$key]['data'][] = $row[$value['name']];
     }
-    $res = ['categories' => $categories, 'series' => $series];
-    return $res;
+  }
+
+
+  return ['labels' => $labels, 'datasets' => $datasets];
 }

@@ -6,12 +6,12 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Heater Monitoring</title>
-  <script src="js/chartJS.js"></script>
+
   <link rel="shortcut icon"
     href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAABMpJREFUWIXtl3mIVWUYxn/ve5Z7RueOzcw1x1HzuhQ1LpkmqBWOjWmZZZJDEC0qLSQaYVImtNBGC2NlG4L5nxASRRRBC/2hBVpktos5WjNjTGY2jc5yl3Pe/phzm1FnTIgb/tEDB77v+Z7zPc/3nu07cDIUeNz3/clxf53rujPj9mhVfbmPdqnjONfH7VLgpbKysoq4P09V747bs1T1gX68TobruvOAb4CE53kXAz8BSQBV3ayqjwGkUqmkiHQAo+Oxe0XkzcI8ItLouu7cuP254zg39OenJxKe5+0RkSrf98fncrn9qppwXXcSgOM4O4EFAIcPH+4Qkb2e580F8H3/C2BWKpUqhP2soFXVncBVpxWgpKSkDfgziqJUOp3uNLNDZjYMwMwazWx4LI3M7EAYhsPjsRYg0dXVNSju74uiqDDWWGj/IxKJxLnAsjjMSOAuQOIKLAJmAKTT6QC4HwgAXNedBSzsM9UqYHh83u3A2P78nBMroqrXiEhkZl/n8/n2ZDJ5LJvNrgBmJxKJxnw+vx2gra2tSlUnqGqFme2Joqi5urq6paOj4z4zm+N53h9RFG2LK3DUdd36KIpagSMDrl5V75xSMsQmBWXmOM7ymF45pWSILSgbZsCWmBviqrbeVpG2miBpqrom5i84y/FsRWqMAa0A9fX1jog031w+ykTk50I1B8Izj1fV2CNV5xvwEbAaePOOyrRtHjXVgC+A1aq6sbY0ZTZlsX047hITkcZY+9Q4f7A11cw3oD3m1rqIRRdeZwpGfMkKcAdKMm1ied30iVr31fe/w8Ee7rwxpVPrZpRO3XegFf2u5/4NxGFohT92yZVnN/za2szu7T3aksBJLq8/p+FY2wG2vDPwik96Cgq44tJhrF87gmtn9wk1qZzn1o3hloXHa0ePGMQLD57P6pt7ueRglw0PTebRFQObnzLAf4X/A5wZAXzfX+w4zkfATcU2FJFtqvpi4aupQRDMSQ4K3li97Oq6WReOO7339b/AE2tunX7Z1PErjx49uhVAs9nskiULa/XSaTVUDBlcbH+mTZnA7dfPxvecy8vKyio0iqJgUEmi6Ma9EFzHwXddaW9vD1zA3n7/Uz7Z+SVNLYeY4Y8sqv3DDZvJdXfQlckCmJtIJJ7e3/TLqP1NtACVVLGomAF27Pr+RmBT/Ilu1Uwm8yOwH9gN7C2meYy3gFwYhh8Adma8B/4P0B9y+YiOrohsvpcL80Znd0gmd7w2jIyOrpDuTC9nBp1dIV3dpw4w4IakYdPesGETEaB3VPbsHbe+1xJtfa8lBHR+snc/uevbtuisiz4OARnn98z525GMJSe/mwfEPYXPcRVQ1bA9ytEe5lHVJwEfuMd6Ja8Dvud5M/dmjnE4n2FH5xFE5N1YO7mP9hDgp9PppAnRL/luDEIg6i/Iq/RsoyeIyEERaQYuAHAcZylgAqaqG/8uneuuV5FuEfnB9/2JAEEQjAbyAiYi+/osbIOIZFX1+ZhqA1KFiZ4FckDW87xlcVVOvDeC+DiOr62t7a+0fqx1+9OqahMQicifQDnAa+urJ9mdlWkD1lB8dDbXXGmVjm9ANar6Sqk6Foiaqq4qtruItFU6vikSAkMLv1jV8XHin1IxUB57DQX4C43VkIwDmXPyAAAAAElFTkSuQmCC" />
 
-  <!-- <script src="./js/chart.js"></script>
-  <link rel="stylesheet" href="./css/chart.css" /> -->
+  <script src="./js/chart.js"></script>
+  <link rel="stylesheet" href="./css/chart.css" />
   <style>
     header {
       display: flex;
@@ -67,7 +67,7 @@
 
   </header>
   <div id="chart-area-container">
-    <canvas id="myChart"></canvas>
+    <div id="chart-area"></div>
   </div>
 
   <script>
@@ -78,7 +78,7 @@
     const endDate = document.querySelector('#endDate');
     const startDate = document.querySelector('#startDate');
     const dateSumbmit = document.querySelector('#dateSumbmit');
-    const myChartElement = document.querySelector('#myChart');
+    const easepickElement = document.querySelector('#easepickElement');
 
     // // SETTINGS
     setDate.addEventListener('submit', fetchNewData);
@@ -88,61 +88,150 @@
     endDate.valueAsDate = new Date();
 
 
-
-
-
-    var config = {
-      type: 'line',
-      options: {
-        scales: {
-          x: {
-            // min: '2022-10-25 13:00:00',
-            // time: {
-            //   displayFormats: {
-            //     quarter: 'MMM YYYY'
-            //   }
-            // }
-          }
-        },
-        elements: {
-          point: {
-            radius: 0,
-          },
-        },
-        responsive: true,
-        interaction: {
-          intersect: false,
-          axis: 'x',
-          mode: 'nearest',
-        },
-      }
-    };
-
-
-    // CHART
-    fetchFirstData().then(res => {
-      console.log(res)
-
-
-      // config = {
-      //   type: 'line',
-      //   data: res,
-      //   options: {}
-      // };
-      config.data = res
-
-
-
-      const myChart = new Chart(myChartElement, config);
-    });
-
     function showSubmit() {
       dateSumbmit.style.opacity = 1;
     }
 
 
 
+    // CHART
+    fetchFirstData().then(data => {
+      console.log(data)
+      chart = toastui.Chart.lineChart({el, data, options});
+    });
 
+
+
+    const options = {
+      series: {
+        spline: true,
+        eventDetectType: 'grouped',
+        zoomable: true,
+        // shift: true,
+      },
+      chart: {
+        // title: 'Heater Monitoring',
+        width: '100%',
+        height: 800
+      },
+      theme: {
+        legend: {
+          label: {
+            fontFamily: 'monaco',
+            fontSize: 16,
+            fontWeight: 400,
+            color: '#000',
+          },
+        },
+        xAxis: {
+          title: {
+            fontFamily: 'monaco',
+            fontSize: 16,
+            fontWeight: 400,
+            color: '#000',
+          },
+          label: {
+            fontFamily: 'monaco',
+            fontSize: 16,
+            fontWeight: 400,
+            color: '#000',
+          },
+          width: 1,
+          color: '#000',
+
+        },
+        yAxis: [
+          {
+            title: {
+              fontFamily: 'monaco',
+              fontSize: 16,
+              fontWeight: 400,
+              color: '#000',
+            },
+            label: {
+              fontFamily: 'monaco',
+              fontSize: 16,
+              fontWeight: 400,
+              color: '#000',
+            },
+            width: 1,
+            color: '#000',
+          },
+          {
+            title: {
+              fontSize: 16,
+              fontWeight: 400,
+              color: '#000',
+            },
+            label: {
+              fontFamily: 'monaco',
+              fontSize: 16,
+              fontWeight: 400,
+              color: '#000',
+            },
+            width: 1,
+            color: '#000',
+          },
+        ],
+      },
+      xAxis: {
+        title: 'Time',
+        pointOnColumn: false,
+        date: {
+          // format: 'HH',
+          format: 'DD.MM-HH',
+        },
+        label: {
+          formatter: (value) => {
+            const index = Number(value.slice(-2));
+            if (index === 0) {
+              return `${value.slice(0, -3)}`;
+            } else {
+              return ` ${index}`;
+            }
+          },
+        },
+      },
+      yAxis: [
+        {
+          title: {
+            text: 'Temperatur',
+            offsetX: 40,
+            offsetY: 0,
+          },
+          chartType: 'line',
+          scale: {
+            min: 10,
+            max: 100,
+          },
+        },
+        {
+          title: {
+            text: 'rel LF (%)',
+            offsetX: -60,
+            offsetY: 0,
+          },
+          chartType: 'area',
+          scale: {
+            min: 0,
+            max: 100,
+          },
+        },
+      ],
+      tooltip: {
+        formatter: (value, tooltipDataInfo) => {
+          const letter = tooltipDataInfo.label.slice(0, 1);
+          if (letter === 'T') {
+            return `${value} °C`;
+          } else {
+            return `${value} %`;
+          }
+        },
+      },
+      legend: {
+        align: 'top',
+      },
+    };
 
 
 
@@ -159,6 +248,13 @@
       const response = await fetch(`/fetch.php?startDate=${startDate.value}&endDate=${endDate.value}`);
       const data = await response.json();
       console.log(data)
+      chart.setData(data)
+      // chart.resetSeries();
+      chart.resize({
+        width: 500,
+        height: 500
+      });
+      console.log(chart)
     } 
   </script>
 </body>
