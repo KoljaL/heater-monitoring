@@ -42,7 +42,10 @@
       border: 1px solid black;
       border-radius: 3px;
       cursor: pointer;
-      /* opacity: 0; */
+    }
+
+    #dateSumbmit {
+      opacity: 0;
     }
 
     #datepicker {
@@ -63,6 +66,8 @@
 <body>
   <header>
     <h1>Heater Monitoring</h1>
+
+
     <input id="datepicker" />
     <form id="setDate">
       <input type="date" id="startDate" />
@@ -75,7 +80,7 @@
   </header>
   <div id="chart-area-container">
     <canvas id="myChart"></canvas>
-    <button onclick="panStatus()">reset Zoom</button>
+    <button onclick="resetChartZoom()">reset Zoom</button>
   </div>
 
   <script>
@@ -83,25 +88,37 @@
     var myChart = ''
     const el = document.getElementById('chart-area');
     const setDate = document.getElementById('setDate');
-    const endDate = document.querySelector('#endDate');
-    const startDate = document.querySelector('#startDate');
+    const endDateElement = document.querySelector('#endDate');
+    const startDateElement = document.querySelector('#startDate');
     const dateSumbmit = document.querySelector('#dateSumbmit');
     const myChartElement = document.querySelector('#myChart');
     const datepickerElement = document.querySelector('#datepicker');
+    var startDate
+    var endDate
+    const DateTime = easepick.DateTime;
 
-    // // SETTINGS
-    setDate.addEventListener('submit', fetchNewData);
-    startDate.addEventListener('focus', showSubmit);
-    endDate.addEventListener('focus', showSubmit);
-    startDate.valueAsDate = new Date();
-    endDate.valueAsDate = new Date();
+    // SETTINGS
+    let hash = location.hash.split('_');
+    if (hash[0].replace('#', '').length === 10 && hash[1].length === 10) {
+      startDate = hash[0].replace('#', '')
+      endDate = hash[1]
+    } else {
+      startDate = new DateTime().format('YYYY-MM-DD');
+      endDate = new DateTime().format('YYYY-MM-DD');
+    }
+
+
+    setDate.addEventListener('submit', fetchNewDataFF);
+    endDateElement.addEventListener('change', showSubmit);
+    startDateElement.addEventListener('change', showSubmit);
+    startDateElement.value = startDate
+    endDateElement.value = endDate
+    datepickerElement.value = `${startDate} - ${endDate}`;
+
 
 
     // PICKER
-    const DateTime = easepick.DateTime;
-    const today = new DateTime();
     // const tomorrow = today.clone().add(1, 'day');
-    datepickerElement.value = `${today.format('DD MMM YYYY')} - ${today.format('DD MMM YYYY')}`;
 
     const picker = new easepick.create({
       element: datepickerElement,
@@ -116,13 +133,10 @@
       setup(picker) {
         picker.on('select', (e) => {
           const {start, end} = e.detail;
-          // http://localhost:9090/fetch.php?startDate=2022-10-25&endDate=2022-10-25
-
-          let startDate = start.format('YYYY-MM-DD')
-          let endDate = end.format('YYYY-MM-DD')
-          fetchNewDataNEW(startDate, endDate)
-          console.log(endDate)
-          console.log(startDate)
+          startDate = start.format('YYYY-MM-DD');
+          endDate = end.format('YYYY-MM-DD');
+          location.hash = startDate + '_' + endDate;
+          fetchNewDataEasePick()
         });
       },
     })
@@ -140,7 +154,6 @@
               maxTicksLimit: 12,
               maxRotation: 0,
               callback: timeFormat,
-
               // source: 'label',
             },
             time: {
@@ -243,17 +256,11 @@
         return time.slice(-5)
       }
     }
-    function panStatus() {
+    function resetChartZoom() {
       myChart.resetZoom()
     };
 
-    // CHART
-    fetchFirstData()
-      .then(data => {
-        console.log(data)
-        config.data = data
-        myChart = new Chart(myChartElement, config);
-      });
+
 
 
 
@@ -265,33 +272,43 @@
 
 
     async function fetchFirstData() {
-      const response = await fetch(`/fetch.php?startDate=${startDate.value}&endDate=${endDate.value}`);
+      const response = await fetch(`/fetch.php?startDate=${startDate}&endDate=${endDate}`);
       const data = await response.json();
       return data;
     }
 
 
-    async function fetchNewDataNEW(startDate, endDate) {
-      dateSumbmit.style.opacity = 0;
+    async function fetchNewDataEasePick() {
+      location.hash = startDate + '_' + endDate;
+
       const response = await fetch(`/fetch.php?startDate=${startDate}&endDate=${endDate}`);
       const data = await response.json();
       console.log(data)
       myChart.config.data = data
       myChart.update();
-      // myChart = new Chart(myChartElement, config);
     }
 
 
-    async function fetchNewData(event) {
+    async function fetchNewDataFF(event) {
       dateSumbmit.style.opacity = 0;
       event.preventDefault();
-      const response = await fetch(`/fetch.php?startDate=${startDate.value}&endDate=${endDate.value}`);
+      location.hash = startDateElement.value + '_' + endDateElement.value;
+      const response = await fetch(`/fetch.php?startDate=${startDateElement.value}&endDate=${endDateElement.value}`);
       const data = await response.json();
       console.log(data)
       myChart.config.data = data
       myChart.update();
-      // myChart = new Chart(myChartElement, config);
-    } 
+    }
+
+
+
+    // CHART
+    fetchFirstData()
+      .then(data => {
+        console.log(data)
+        config.data = data
+        myChart = new Chart(myChartElement, config);
+      });
   </script>
 </body>
 
