@@ -1,4 +1,7 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 echo "<pre>";
 // localhost:9090/store.php?ESP=haus_one&temp_1=10&temp_2=29&hum_1=40
@@ -6,7 +9,10 @@ include 'config.php';
 date_default_timezone_set('Europe/Berlin');
 
 
- 
+// print_r($_SERVER);
+// exit;
+
+
 removeDB();
 // create new database
 $db = new SQLite3($config['db_file']);
@@ -16,6 +22,7 @@ initDB('haus_two');
 createDummyData('haus_two');
 exit;
 ////////////////////////////////// FUNCTIONS //////////////////////////////////
+
 
 
 /**
@@ -43,7 +50,7 @@ function initDB($esp) {
   global $db, $config;
   $sensors = $config['ESP'][$esp]['sensors'];
   $db->exec("CREATE TABLE IF NOT EXISTS $esp(id INTEGER PRIMARY KEY AUTOINCREMENT)");
-  $db->exec("ALTER TABLE $esp ADD COLUMN date DATETIME DEFAULT CURRENT_TIMESTAMP ");
+  $db->exec("ALTER TABLE $esp ADD COLUMN date DATETIME DEFAULT '0' ");
   foreach ($sensors as $sensor) {
     $sensorName = $sensor['name'];
     $db->exec("ALTER TABLE $esp ADD COLUMN $sensorName INTEGER NOT NULL DEFAULT '0' ");

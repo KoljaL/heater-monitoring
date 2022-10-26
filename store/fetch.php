@@ -1,5 +1,7 @@
 <?php
-// error_reporting(E_ALL ^ E_WARNING);
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 // localhost:9090/store.php?ESP=haus_one&temp_1=10&temp_2=29&hum_1=40
 
 
