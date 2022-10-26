@@ -31,12 +31,29 @@
 
     input {
       cursor: pointer;
-      border: none;
+      border: 1px solid transparent;
       font-size: 1.2rem;
       position: relative;
+      background: none;
+      padding: .5rem;
     }
 
+    #selectESP {
+      cursor: pointer;
+      border: 1px solid transparent;
+      padding: .5rem;
 
+      font-size: 1.2rem;
+      position: relative;
+      background: none;
+    }
+
+    input:focus,
+    input:hover,
+    #selectESP:hover {
+      border: 1px solid cornflowerblue;
+      border-radius: .5rem;
+    }
 
     button {
       border: 1px solid black;
@@ -46,10 +63,20 @@
 
     #dateSumbmit {
       opacity: 0;
+      color: cornflowerblue;
+      border: 1px solid cornflowerblue;
+      border-radius: .5rem;
+      padding: .5rem;
+
     }
 
     #datepicker {
       width: 300px;
+      display: none;
+    }
+
+    #setDate {
+      display: none;
     }
 
     #chart-area-container {
@@ -59,14 +86,54 @@
       border: 1px solid black;
       border-radius: .5rem;
     }
+
+    .chartButtons {
+      display: flex;
+      align-items: center;
+      justify-content: end;
+      gap: 1rem;
+      margin-top: 1rem;
+      margin-right: 2rem;
+    }
+
+    a {
+      text-decoration: none;
+      color: cornflowerblue;
+    }
+
+    a:hover {
+      color: rgb(76, 111, 177);
+    }
+
+    .chartButtons button {
+      border: none;
+      background: none;
+      color: cornflowerblue;
+    }
+
+    .chartButtons button:hover {
+      color: rgb(76, 111, 177);
+    }
+
+    .dbLinks {
+      display: flex;
+      align-items: center;
+      justify-content: start;
+      gap: 1rem;
+      margin-top: 1rem;
+      margin-left: 2rem;
+    }
   </style>
 </head>
 </head>
 
 <body>
   <header>
-    <h1>Heater Monitoring</h1>
+    <a href="http://localhost:9090/">
+      <h1>Heater Monitoring</h1>
+    </a>
 
+    <select onchange="changeESP()" name="selectESP" id="selectESP"></select>
 
     <input id="datepicker" />
     <form id="setDate">
@@ -80,76 +147,171 @@
   </header>
   <div id="chart-area-container">
     <canvas id="myChart"></canvas>
-    <button onclick="resetChartZoom()">reset Zoom</button>
+    <div class="chartButtons">
+      <button onclick="resetChartZoom()">reset Zoom</button>
+      <button onclick="steppedChart(this)">stepped</button>
+    </div>
+  </div>
+  <div class="dbLinks">
+    <a target="_blank" href="store.php?ESP=haus_one&dummyData&initDB&removeDB">fullReset</a>
+    ONE:
+    <a target="_blank" href="store.php?ESP=haus_one&dummyValue">dummyValue</a>
+    <a target="_blank" href="store.php?ESP=haus_one&dummyData">dummyData</a>
+    <a target="_blank" href="store.php?ESP=haus_one&initDB">initDB</a>
+    TWO:
+    <a target="_blank" href="store.php?ESP=haus_two&dummyValue">dummyValue</a>
+    <a target="_blank" href="store.php?ESP=haus_two&dummyData">dummyData</a>
+    <a target="_blank" href="store.php?ESP=haus_two&initDB">initDB</a>
+    <a target="_blank" href="store.php?removeDB">removeDB</a>
   </div>
 
   <script>
     // ELEMENTS
-    var myChart = ''
-    const el = document.getElementById('chart-area');
+    // for firefox
     const setDate = document.getElementById('setDate');
     const endDateElement = document.querySelector('#endDate');
     const startDateElement = document.querySelector('#startDate');
     const dateSumbmit = document.querySelector('#dateSumbmit');
-    const myChartElement = document.querySelector('#myChart');
+    // for others
     const datepickerElement = document.querySelector('#datepicker');
-    var startDate
-    var endDate
-    const DateTime = easepick.DateTime;
+    const selectESP = document.querySelector('#selectESP');
+
+
+    // chart element
+    const myChartElement = document.querySelector('#myChart');
 
     // SETTINGS
-    let hash = location.hash.split('_');
-    if (hash[0].replace('#', '').length === 10 && hash[1].length === 10) {
-      startDate = hash[0].replace('#', '')
+    var startDate, endDate, myChart, ESP;
+    // var ESP = 'haus_one'
+    const DateTime = easepick.DateTime;
+    // get dates from url
+    let hash = location.hash.replace('#', '').split(':');
+    if (hash[0].length === 10 && hash[1].length === 10) {
+      startDate = hash[0]
       endDate = hash[1]
-    } else {
+    }
+    // or set today as date
+    else {
       startDate = new DateTime().format('YYYY-MM-DD');
       endDate = new DateTime().format('YYYY-MM-DD');
+      location.hash = startDate + ':' + endDate;
     }
 
 
-    setDate.addEventListener('submit', fetchNewDataFF);
-    endDateElement.addEventListener('change', showSubmit);
-    startDateElement.addEventListener('change', showSubmit);
-    startDateElement.value = startDate
-    endDateElement.value = endDate
-    datepickerElement.value = `${startDate} - ${endDate}`;
+    /**
+     * 
+     * BROWSER SWITCH
+     * because FF has problems with the dateRangePicker
+     * 
+     */
+
+    // for Firefox
+    if (navigator.userAgent.includes('Firefox')) {
+      setDate.style.display = 'block';
+      startDateElement.value = startDate
+      endDateElement.value = endDate
+      setDate.addEventListener('submit', fetchNewDataFF);
+      endDateElement.addEventListener('change', () => {
+        dateSumbmit.style.opacity = 1;
+      });
+      startDateElement.addEventListener('change', () => {
+        dateSumbmit.style.opacity = 1;
+      });
+    }// onlyFF
+    //
+    // for everyone else
+    else {
+      datepickerElement.style.display = 'block'
+      let pickerStart = new DateTime(startDate).format('DD MMM YYYY')
+      let pickerEnd = new DateTime(endDate).format('DD MMM YYYY')
+      datepickerElement.value = pickerStart + ' - ' + pickerEnd;
+      // console.log(startDate)
+      // console.log(endDate)
+      // const tomorrow = today.clone().add(1, 'day');
+
+      // addEventListener('hashchange', (event) => {
+      //   startDate = new DateTime().format('YYYY-MM-DD');
+      //   endDate = new DateTime().format('YYYY-MM-DD');
+      //   location.hash = startDate + ':' + endDate;
+      //   fetchNewDataEasePick();
+      // });
 
 
+      // PICKER
+      const picker = new easepick.create({
+        element: datepickerElement,
+        css: ["css/easepick.css"],
+        zIndex: 1000,
+        lang: "de-DE",
+        format: "DD MMM YYYY",
+        plugins: [
+          "AmpPlugin",
+          "RangePlugin"
+        ],
+        setup(picker) {
+          picker.on('select', (e) => {
+            const {start, end} = e.detail;
+            startDate = start.format('YYYY-MM-DD');
+            endDate = end.format('YYYY-MM-DD');
+            location.hash = startDate + ':' + endDate;
+            fetchNewDataEasePick()
+          });
+        },
+      })
+    } // noFF
 
-    // PICKER
-    // const tomorrow = today.clone().add(1, 'day');
 
-    const picker = new easepick.create({
-      element: datepickerElement,
-      css: ["css/easepick.css"],
-      zIndex: 1000,
-      lang: "de-DE",
-      format: "DD MMM YYYY",
-      plugins: [
-        "AmpPlugin",
-        "RangePlugin"
-      ],
-      setup(picker) {
-        picker.on('select', (e) => {
-          const {start, end} = e.detail;
-          startDate = start.format('YYYY-MM-DD');
-          endDate = end.format('YYYY-MM-DD');
-          location.hash = startDate + '_' + endDate;
-          fetchNewDataEasePick()
-        });
-      },
-    })
+    const animation = {
+      // x: {
+      //   type: 'number',
+      //   easing: 'easeInQuad',
+      //   duration: 100,
+      //   from: NaN, // the point is initially skipped
+      //   delay(ctx) {
+      //     if (ctx.type !== 'data' || ctx.xStarted) {
+      //       return 0;
+      //     }
+      //     ctx.xStarted = true;
+      //     return ctx.index * 1;
+      //   }
+      // },
+      y: {
+        type: 'number',
+        easing: 'easeOutQuad',
+        duration: 100,
+        from: NaN,
+        delay(ctx) {
+          if (ctx.type !== 'data' || ctx.yStarted) {
+            return 0;
+          }
+          ctx.yStarted = true;
+          return ctx.index * 1;
+        }
+      }
+    };
 
-    // CHART CONFIG
+    /**
+     * 
+     * CHART CONFIG
+     * 
+     */
     var config = {
       type: 'line',
       options: {
+        spanGaps: true,
         responsive: true,
+        animation,
+        // animation: {
+        //   duration: 200,
+        //   easing: 'linear',
+        // },
+
         scales: {
           x: {
             type: 'time',
             distribution: 'series',
+            min: startDate || null,// new Date('2019-01-01').valueOf(),
+            max: endDate || null, //new Date('2019-12-31').valueOf(),
             ticks: {
               maxTicksLimit: 12,
               maxRotation: 0,
@@ -159,19 +321,11 @@
             time: {
               parser: 'YYYY-MM-DD HH:mm:ss',
               unit: 'hour',
-              // stepSize: 3600,
-
               tooltipFormat: 'DD.MM.YYYY HH:mm',
               displayFormats: {
-                // second: 'HH:mm',
-                // minute: 'HH:mm',
                 hour: 'DD.MM.YYYY HH:mm'
               }
             },
-            // scaleLabel: {
-            //   display: true,
-            //   labelString: 'Time'
-            // },
           },
           Yleft: {
             type: 'linear',
@@ -192,6 +346,10 @@
           },
         },
         elements: {
+          line: {
+            tension: 0,
+            stepped: false,
+          },
           point: {
             radius: 0,
           },
@@ -211,6 +369,7 @@
         },
         plugins: {
           tooltip: {
+            animation: false,
             usePointStyle: true,
             enabled: true,
             position: 'average',
@@ -247,7 +406,12 @@
       }
     };
 
-
+    /**
+     * 
+     * tick format for x axis
+     * set 00:00 to full date
+     * 
+     */
     function timeFormat(time) {
       // console.log(time)
       if (time.slice(-5) == '00:00') {
@@ -256,59 +420,144 @@
         return time.slice(-5)
       }
     }
+
+
+    /**
+     * 
+     * reset zoom
+     * 
+     */
     function resetChartZoom() {
       myChart.resetZoom()
     };
 
+    function steppedChart(el) {
+      if (el.innerHTML === 'stepped') {
+        el.innerHTML = 'tension'
+        myChart.options.elements.line.stepped = false;
+        myChart.options.elements.line.tension = .5;
+      }
 
+      else if (el.innerHTML === 'tension') {
+        el.innerHTML = 'default'
+        myChart.options.elements.line.stepped = false;
+        myChart.options.elements.line.tension = 0;
+      }
+      else if (el.innerHTML === 'default') {
+        el.innerHTML = 'stepped'
+        myChart.options.elements.line.stepped = true;
+        myChart.options.elements.line.tension = 0;
+      }
 
-
-
-    function showSubmit() {
-      dateSumbmit.style.opacity = 1;
-    }
-
-
-
-
-    async function fetchFirstData() {
-      const response = await fetch(`/fetch.php?startDate=${startDate}&endDate=${endDate}`);
-      const data = await response.json();
-      return data;
-    }
-
-
-    async function fetchNewDataEasePick() {
-      location.hash = startDate + '_' + endDate;
-
-      const response = await fetch(`/fetch.php?startDate=${startDate}&endDate=${endDate}`);
-      const data = await response.json();
-      console.log(data)
-      myChart.config.data = data
       myChart.update();
     }
 
+    /**
+     * 
+     * fetch new data from date picker
+     * 
+     */
+    async function fetchNewDataEasePick() {
+      location.hash = startDate + ':' + endDate;
+      const response = await fetch(`/fetch.php?ESP=${ESP}&startDate=${startDate}&endDate=${endDate}`);
+      const data = await response.json();
+      console.log(data)
+      myChart.config.options.scales.x.min = startDate + " 00:00:00"
+      myChart.config.options.scales.x.max = endDate + " 23:59:59"
+      myChart.config.data = data
+      myChart.update();
+      myChart.resetZoom()
+      console.log(myChart.config.options.scales.x)
+    }
 
+
+    function changeESP() {
+      ESP = selectESP.value
+      fetchNewDataEasePick()
+    }
+
+    /**
+     * 
+     * for Firefox only
+     * fetch new data from form elements
+     * 
+     */
     async function fetchNewDataFF(event) {
       dateSumbmit.style.opacity = 0;
       event.preventDefault();
-      location.hash = startDateElement.value + '_' + endDateElement.value;
-      const response = await fetch(`/fetch.php?startDate=${startDateElement.value}&endDate=${endDateElement.value}`);
-      const data = await response.json();
-      console.log(data)
-      myChart.config.data = data
-      myChart.update();
+      startDate = startDateElement.value
+      endDate = endDateElement.value
+      fetchNewDataEasePick()
+      // location.hash = startDateElement.value + '_' + endDateElement.value;
+      // const response = await fetch(`/fetch.php?startDate=${startDateElement.value}&endDate=${endDateElement.value}`);
+      // const data = await response.json();
+      // console.log(data)
+      // myChart.config.options.scales.x.min = startDate + " 00:00:00"
+      // myChart.config.options.scales.x.max = endDate + " 23:59:59"
+      // myChart.config.data = data
+      // myChart.update();
+      // myChart.resetZoom()
     }
 
 
 
-    // CHART
-    fetchFirstData()
-      .then(data => {
-        console.log(data)
-        config.data = data
-        myChart = new Chart(myChartElement, config);
+    /**
+     * 
+     * fetch first data and create new Chart
+     * 
+     */
+    async function getConfig() {
+      const response = await fetch(`/fetch.php?config`);
+      const data = await response.json();
+      return data
+    }
+
+
+
+
+    /**
+     * 
+     * fetch first data and create new Chart
+     * 
+     */
+    async function initChart() {
+      const configPHP = await getConfig();
+      console.info('configPHP', configPHP)
+
+      ESP = Object.keys(configPHP)[0]
+      ESPdropdown(Object.keys(configPHP));
+
+      const responseD = await fetch(`/fetch.php?ESP=${ESP}&startDate=${startDate}&endDate=${endDate}`);
+      const data = await responseD.json();
+      console.info('data', data)
+      config.options.scales.x.min = startDate + " 00:00:00"
+      config.options.scales.x.max = endDate + " 23:59:59"
+      config.data = data
+      myChart = new Chart(myChartElement, config);
+    }
+
+    /**
+     * 
+     * make options for ESP dropdown list
+     * 
+     */
+    function ESPdropdown(keys) {
+      let options;
+      keys.forEach(key => {
+        options += `<option value="${key}">${key.replace('_', ' ')}</option>`
       });
+      selectESP.innerHTML = options;
+    }
+
+    /**
+     * 
+     * start function
+     * fetch data &
+     * fetch config &
+     * initialize new chart
+     * 
+     */
+    initChart() 
   </script>
 </body>
 

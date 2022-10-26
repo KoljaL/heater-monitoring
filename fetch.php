@@ -1,40 +1,39 @@
 <?php
-
-// localhost:9090/store.php?ESP=haus_one&temp_1=10&temp_2=29&hum_1=40
-include 'config.php';
-
 // error_reporting(E_ALL ^ E_WARNING);
+// localhost:9090/store.php?ESP=haus_one&temp_1=10&temp_2=29&hum_1=40
 
 
+include 'config.php';
+// connect to database
+$db = new SQLite3($config['db_file']);
+
+// set date format
 date_default_timezone_set('Europe/Berlin');
 $now = new DateTimeImmutable();
 
 
-// get ESP name from URL and remove it from GET array
-$esp = (isset($_GET['ESP'])) ? $_GET['ESP'] : 'haus_one';
-$startDate = (isset($_GET['startDate'])) ? $_GET['startDate'] . ' 00:00:00' : date('Y-m-d', time()) . ' 00:00:00';
-$endDate = (isset($_GET['endDate'])) ? $_GET['endDate'] . ' 23:59:59' : $now->format('Y-m-d H:i:s');
 
 
-// echo $startDate;
-// echo "<br>";
-// echo $endDate;
+if (isset($_GET['ESP'])) {
+  $esp = $_GET['ESP'];
+  $startDate = (isset($_GET['startDate'])) ? $_GET['startDate'] . ' 00:00:00' : date('Y-m-d', time()) . ' 00:00:00';
+  $endDate = (isset($_GET['endDate'])) ? $_GET['endDate'] . ' 23:59:59' : $now->format('Y-m-d H:i:s');
 
-// connect to database
-$db = new SQLite3($config['db_file']);
-
-
-
-
-$res = fetchValues($esp, $startDate, $endDate);
-// print_r($res);
-
-echo json_encode($res);
-
-// print_r($JSON);
+  $res = fetchValues($esp, $startDate, $endDate);
+  //print_r($res);
+  echo json_encode($res);
+  exit;
+}
 
 
-// exit;
+if (isset($_GET['config'])) {
+  echo json_encode($config['ESP']);
+}
+
+
+
+
+
 
 
 
