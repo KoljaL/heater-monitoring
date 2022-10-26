@@ -15,12 +15,16 @@
   <link rel="shortcut icon"
     href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAABMpJREFUWIXtl3mIVWUYxn/ve5Z7RueOzcw1x1HzuhQ1LpkmqBWOjWmZZZJDEC0qLSQaYVImtNBGC2NlG4L5nxASRRRBC/2hBVpktos5WjNjTGY2jc5yl3Pe/phzm1FnTIgb/tEDB77v+Z7zPc/3nu07cDIUeNz3/clxf53rujPj9mhVfbmPdqnjONfH7VLgpbKysoq4P09V747bs1T1gX68TobruvOAb4CE53kXAz8BSQBV3ayqjwGkUqmkiHQAo+Oxe0XkzcI8ItLouu7cuP254zg39OenJxKe5+0RkSrf98fncrn9qppwXXcSgOM4O4EFAIcPH+4Qkb2e580F8H3/C2BWKpUqhP2soFXVncBVpxWgpKSkDfgziqJUOp3uNLNDZjYMwMwazWx4LI3M7EAYhsPjsRYg0dXVNSju74uiqDDWWGj/IxKJxLnAsjjMSOAuQOIKLAJmAKTT6QC4HwgAXNedBSzsM9UqYHh83u3A2P78nBMroqrXiEhkZl/n8/n2ZDJ5LJvNrgBmJxKJxnw+vx2gra2tSlUnqGqFme2Joqi5urq6paOj4z4zm+N53h9RFG2LK3DUdd36KIpagSMDrl5V75xSMsQmBWXmOM7ymF45pWSILSgbZsCWmBviqrbeVpG2miBpqrom5i84y/FsRWqMAa0A9fX1jog031w+ykTk50I1B8Izj1fV2CNV5xvwEbAaePOOyrRtHjXVgC+A1aq6sbY0ZTZlsX047hITkcZY+9Q4f7A11cw3oD3m1rqIRRdeZwpGfMkKcAdKMm1ied30iVr31fe/w8Ee7rwxpVPrZpRO3XegFf2u5/4NxGFohT92yZVnN/za2szu7T3aksBJLq8/p+FY2wG2vDPwik96Cgq44tJhrF87gmtn9wk1qZzn1o3hloXHa0ePGMQLD57P6pt7ueRglw0PTebRFQObnzLAf4X/A5wZAXzfX+w4zkfATcU2FJFtqvpi4aupQRDMSQ4K3li97Oq6WReOO7339b/AE2tunX7Z1PErjx49uhVAs9nskiULa/XSaTVUDBlcbH+mTZnA7dfPxvecy8vKyio0iqJgUEmi6Ma9EFzHwXddaW9vD1zA3n7/Uz7Z+SVNLYeY4Y8sqv3DDZvJdXfQlckCmJtIJJ7e3/TLqP1NtACVVLGomAF27Pr+RmBT/Ilu1Uwm8yOwH9gN7C2meYy3gFwYhh8Adma8B/4P0B9y+YiOrohsvpcL80Znd0gmd7w2jIyOrpDuTC9nBp1dIV3dpw4w4IakYdPesGETEaB3VPbsHbe+1xJtfa8lBHR+snc/uevbtuisiz4OARnn98z525GMJSe/mwfEPYXPcRVQ1bA9ytEe5lHVJwEfuMd6Ja8Dvud5M/dmjnE4n2FH5xFE5N1YO7mP9hDgp9PppAnRL/luDEIg6i/Iq/RsoyeIyEERaQYuAHAcZylgAqaqG/8uneuuV5FuEfnB9/2JAEEQjAbyAiYi+/osbIOIZFX1+ZhqA1KFiZ4FckDW87xlcVVOvDeC+DiOr62t7a+0fqx1+9OqahMQicifQDnAa+urJ9mdlWkD1lB8dDbXXGmVjm9ANar6Sqk6Foiaqq4qtruItFU6vikSAkMLv1jV8XHin1IxUB57DQX4C43VkIwDmXPyAAAAAElFTkSuQmCC" />
   <style>
+    * {
+      transition: all .5s;
+    }
+
     header {
       display: flex;
       flex-direction: row;
-      align-items: center;
+      align-items: baseline;
       justify-content: space-between;
-      margin-inline: 1rem;
+      margin-inline: 2rem;
       padding: .5rem;
     }
 
@@ -42,7 +46,6 @@
       cursor: pointer;
       border: 1px solid transparent;
       padding: .5rem;
-
       font-size: 1.2rem;
       position: relative;
       background: none;
@@ -136,13 +139,19 @@
     <select onchange="changeESP()" name="selectESP" id="selectESP"></select>
 
     <input id="datepicker" />
+
     <form id="setDate">
       <input type="date" id="startDate" />
       -
       <input type="date" id="endDate" />
       <button id="dateSumbmit">Submit</button>
     </form>
-    <div></div>
+    <a href="https://github.com/KoljaL/heater-monitoring/" target="_blank">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+        <path
+          d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+      </svg>
+    </a>
 
   </header>
   <div id="chart-area-container">
@@ -153,16 +162,7 @@
     </div>
   </div>
   <div class="dbLinks">
-    <a target="_blank" href="store.php?ESP=haus_one&dummyData&initDB&removeDB">fullReset</a>
-    ONE:
-    <a target="_blank" href="store.php?ESP=haus_one&dummyValue">dummyValue</a>
-    <a target="_blank" href="store.php?ESP=haus_one&dummyData">dummyData</a>
-    <a target="_blank" href="store.php?ESP=haus_one&initDB">initDB</a>
-    TWO:
-    <a target="_blank" href="store.php?ESP=haus_two&dummyValue">dummyValue</a>
-    <a target="_blank" href="store.php?ESP=haus_two&dummyData">dummyData</a>
-    <a target="_blank" href="store.php?ESP=haus_two&initDB">initDB</a>
-    <a target="_blank" href="store.php?removeDB">removeDB</a>
+    <a target="_blank" href="/store/dummy.php">reset Database</a>
   </div>
 
   <script>
@@ -459,7 +459,7 @@
      */
     async function fetchNewDataEasePick() {
       location.hash = startDate + ':' + endDate;
-      const response = await fetch(`/fetch.php?ESP=${ESP}&startDate=${startDate}&endDate=${endDate}`);
+      const response = await fetch(`/store/fetch.php?ESP=${ESP}&startDate=${startDate}&endDate=${endDate}`);
       const data = await response.json();
       console.log(data)
       myChart.config.options.scales.x.min = startDate + " 00:00:00"
@@ -507,7 +507,7 @@
      * 
      */
     async function getConfig() {
-      const response = await fetch(`/fetch.php?config`);
+      const response = await fetch(`/store/fetch.php?config`);
       const data = await response.json();
       return data
     }
@@ -527,7 +527,7 @@
       ESP = Object.keys(configPHP)[0]
       ESPdropdown(Object.keys(configPHP));
 
-      const responseD = await fetch(`/fetch.php?ESP=${ESP}&startDate=${startDate}&endDate=${endDate}`);
+      const responseD = await fetch(`/store/fetch.php?ESP=${ESP}&startDate=${startDate}&endDate=${endDate}`);
       const data = await responseD.json();
       console.info('data', data)
       config.options.scales.x.min = startDate + " 00:00:00"

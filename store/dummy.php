@@ -5,14 +5,17 @@ echo "<pre>";
 include 'config.php';
 date_default_timezone_set('Europe/Berlin');
 
-// connect to database
+
+ 
+removeDB();
+// create new database
 $db = new SQLite3($config['db_file']);
-
-// print_r($_GET);
-// print_r($config['ESP']);
-
-
-// exit;
+initDB('haus_one');
+createDummyData('haus_one');
+initDB('haus_two');
+createDummyData('haus_two');
+exit;
+////////////////////////////////// FUNCTIONS //////////////////////////////////
 
 
 /**
@@ -22,9 +25,10 @@ $db = new SQLite3($config['db_file']);
  * store.php?removeDB
  * 
  */
-if (isset($_GET['removeDB'])) {
+function removeDB() {
+  global $config, $db;
   unlink($config['db_file']);
-  echo "Database removed<br>";
+  echo "<h2>Database removed</h2>";
 }
 
 
@@ -34,52 +38,22 @@ if (isset($_GET['removeDB'])) {
  * 
  * store.php?initDB
  * 
- */
-if (isset($_GET['initDB'])) {
-  $esp = (isset($_GET['ESP'])) ? $_GET['ESP'] : key($config['ESP']);
-  unset($_GET['initDB']);
-
-  $db = new SQLite3($config['db_file']);
-  initDB($esp);
-  echo "Database initialized<br>";
-}
-
-/**
- *
- * insert dummy values
- *
- * store.php?dummyValue
- *
- */
-if (isset($_GET['dummyValue'])) {
-  $esp = (isset($_GET['ESP'])) ? $_GET['ESP'] : key($config['ESP']);
-  $_GET['ESP'] = $esp;
-  unset($_GET['dummyValue']);
+ */ 
+function initDB($esp) {
+  global $db, $config;
   $sensors = $config['ESP'][$esp]['sensors'];
+  $db->exec("CREATE TABLE IF NOT EXISTS $esp(id INTEGER PRIMARY KEY AUTOINCREMENT)");
+  $db->exec("ALTER TABLE $esp ADD COLUMN date DATETIME DEFAULT CURRENT_TIMESTAMP ");
   foreach ($sensors as $sensor) {
-    $AxisID = $sensor['yAxisID'];
-    $min = $config['ESP'][$esp]['axis'][$AxisID]['min'];
-    $max = $config['ESP'][$esp]['axis'][$AxisID]['max'];
-    $name = $sensor['name'];
-    $_GET[$name] = rand($min, $max);
+    $sensorName = $sensor['name'];
+    $db->exec("ALTER TABLE $esp ADD COLUMN $sensorName INTEGER NOT NULL DEFAULT '0' ");
   }
-  print_r($_GET);
+  echo "<h2>Database for $esp initialized</h2>";
 }
 
 
-/**
- * 
- * insert values
- * 
- * store.php?ESP=haus_one&temp_1=10&temp_2=29&hum_1=40
- * 
- */
-if (isset($_GET['saveValues'])) {
-  $esp = $_GET['ESP'];
-  unset($_GET['ESP']);
-  insertValues($esp);
-  echo "insert values<br>";
-}
+
+
 
 
 /**
@@ -89,27 +63,27 @@ if (isset($_GET['saveValues'])) {
  * store.php?dummyData
  * 
  */
-if (isset($_GET['dummyData'])) {
-  $esp = (isset($_GET['ESP'])) ? $_GET['ESP'] : key($config['ESP']);
+function createDummyData($esp){
+  global $db, $config;
   $datem2 = date("Y-m-d", mktime(0, 0, 0, date("m"), date("d") - 2, date("Y")));
   $datem1 = date("Y-m-d", mktime(0, 0, 0, date("m"), date("d") - 1, date("Y")));
   $date0 = date("Y-m-d", mktime(0, 0, 0, date("m"), date("d"), date("Y")));
   $datep1 = date("Y-m-d", mktime(0, 0, 0, date("m"), date("d") + 1, date("Y")));
   $datep2 = date("Y-m-d", mktime(0, 0, 0, date("m"), date("d") + 2, date("Y")));
 
-  dummyData($datem2);
-  dummyData($datem1);
-  dummyData($date0);
-  dummyData($datep1);
-  dummyData($datep2);
+  dummyData($datem2,$esp);
+  dummyData($datem1,$esp);
+  dummyData($date0,$esp);
+  dummyData($datep1,$esp);
+  dummyData($datep2,$esp);
   echo "insert dummy values<br>";
 }
 
 
 
 
-function dummyData($day) {
-  global $db, $esp;
+function dummyData($day,$esp) {
+  global $db;
   $i = 0;
   // hours
   for ($h = 0; $h < 24; $h++) {
@@ -122,32 +96,35 @@ function dummyData($day) {
         $m = "0" . $m;
       }
 
-      // if (rand(1, 5) > 3) {
-      //   // echo "'2022-10-" . $day . ' ' . $h . ":" . $m . ":00'<br>";
-      //   continue;
-      // }
+      // randomly add no value
+      if (rand(1, 5) > 3) {
+        // echo "'2022-10-" . $day . ' ' . $h . ":" . $m . ":00'<br>";
+        continue;
+      }
 
+      // no values in hours
       if ($h === 12 || $h === 18) {
         continue;
       }
 
 
-      // OUTPUT 
+      // date 
       $date = "'" . $day . ' ' . $h . ":" . $m . ":00'";
 
-      if($esp === 'haus_one'){
+      // values
+      if ($esp === 'haus_one') {
         $temp_1 = "'" . rand(10, 20) . "'";
         $temp_2 = "'" . rand(20, 30) . "'";
         $hum_1 = "'" . rand(50, 60) . "'";
         $hum_2 = "'" . rand(70, 80) . "'";
-      }else{
+      } else {
         $temp_1 = "'" . rand(20, 30) . "'";
         $temp_2 = "'" . rand(40, 60) . "'";
         $hum_1 = "'" . rand(40, 60) . "'";
-        $hum_2 = "'" . rand(30, 80) . "'";   
+        $hum_2 = "'" . rand(30, 80) . "'";
       }
-      
-      
+
+
       // insert into DB
       $statement = $db->prepare("insert into $esp ('temp_1', 'temp_2', 'hum_1', 'hum_2','date')  values ($temp_1, $temp_2, $hum_1, $hum_2,$date)");
       $statement->execute();
@@ -159,58 +136,33 @@ function dummyData($day) {
 }
 
 
-//////////////////////////////////  FUNCTIONS  //////////////////////////////////
 
 
 
 
-/**
- * insertValues($esp)
- * @param string $esp
- * @return void
- */
-function insertValues($esp) {
-  global $db;
-  // get all keys and values from URL as two strings
-  $date = date("Y-m-d H:i:s");
-  $columns = '(' . implode(',', array_keys($_GET)) . ',date)';
-  $values = "('" . implode("','", $_GET) . "','" . $date . "')";
-
-  // echo $columns . "<br>";
-  // echo $values . "<br>";
-
-  // prepare and execute statement
-  $statement = $db->prepare("insert into $esp" . $columns . " values" . $values);
-  $statement->execute();
-}
 
 
-
-
-/**
- *
- * initDB()
- *
- * @param string $esp
- * @param array $sensors
- */
-function initDB($esp) {
-  global $db, $config;
-
-  // get all sensors for this ESP from database
-  $sensors = $config['ESP'][$esp]['sensors'];
-  // print_r($sensors);
-
-  $db->exec("CREATE TABLE IF NOT EXISTS  $esp(id INTEGER PRIMARY KEY AUTOINCREMENT)");
-  $db->exec("ALTER TABLE  $esp ADD COLUMN date DATETIME DEFAULT CURRENT_TIMESTAMP ");
-  foreach ($sensors as $sensor) {
-    $sensorName = $sensor['name'];
-    $db->exec("ALTER TABLE  $esp ADD COLUMN $sensorName INTEGER NOT NULL DEFAULT '0' ");
-  }
-}
-
-
-
+// /**
+//  *
+//  * insert dummy values
+//  *
+//  * store.php?dummyValue
+//  *
+//  */
+// if (isset($_GET['dummyValue'])) {
+// $esp = (isset($_GET['ESP'])) ? $_GET['ESP'] : key($config['ESP']);
+// $_GET['ESP'] = $esp;
+// unset($_GET['dummyValue']);
+// $sensors = $config['ESP'][$esp]['sensors'];
+// foreach ($sensors as $sensor) {
+// $AxisID = $sensor['yAxisID'];
+// $min = $config['ESP'][$esp]['axis'][$AxisID]['min'];
+// $max = $config['ESP'][$esp]['axis'][$AxisID]['max'];
+// $name = $sensor['name'];
+// $_GET[$name] = rand($min, $max);
+// }
+// print_r($_GET);
+// }
 
 
 

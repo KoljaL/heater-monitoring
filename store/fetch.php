@@ -4,30 +4,57 @@
 
 
 include 'config.php';
+
+
+// send config array as JSON
+//
+if (isset($_GET['config'])) {
+  echo json_encode($config['ESP']);
+  exit;
+}
+
 // connect to database
 $db = new SQLite3($config['db_file']);
 
 // set date format
 date_default_timezone_set('Europe/Berlin');
-$now = new DateTimeImmutable();
+// $now = new DateTimeImmutable();
+// $now->format('Y-m-d H:i:s');
 
 
-
-
+// check if ESP name is set in URL
+//
 if (isset($_GET['ESP'])) {
   $esp = $_GET['ESP'];
-  $startDate = (isset($_GET['startDate'])) ? $_GET['startDate'] . ' 00:00:00' : date('Y-m-d', time()) . ' 00:00:00';
-  $endDate = (isset($_GET['endDate'])) ? $_GET['endDate'] . ' 23:59:59' : $now->format('Y-m-d H:i:s');
 
+  // check if ESP name exists in config
+  //
+  if (!isset($config['ESP'][$esp])) {
+    echo '<h2>ESP name not in config.php</h2>';
+    exit;
+  }
+
+  // get dates from URL or use today as default
+  //
+  $startDate = (isset($_GET['startDate'])) ? $_GET['startDate'] . ' 00:00:00' : date('Y-m-d', time()) . ' 00:00:00';
+  $endDate = (isset($_GET['endDate'])) ? $_GET['endDate'] . ' 23:59:59' : date('Y-m-d', time()) . ' 23:59:59';
+ 
+  // fetch values from database
+  //
   $res = fetchValues($esp, $startDate, $endDate);
   //print_r($res);
+
+  // send result as JSON
+  //
   echo json_encode($res);
   exit;
-}
+} 
 
-
-if (isset($_GET['config'])) {
-  echo json_encode($config['ESP']);
+// error if there is no ESP in URL
+//
+else {
+  echo '<h2>no ESP name in URL</h2>';
+  exit;
 }
 
 
@@ -48,15 +75,20 @@ if (isset($_GET['config'])) {
  */
 function fetchValues($esp, $startDate, $endDate) {
   global $db, $config;
-  // get current sensors
+  
+  // get sensors for this ESP
+  //
   $sensors = $config['ESP'][$esp]['sensors'];
+  
   // fetch data from DB
+  //
   $stmt = $db->prepare("SELECT * FROM $esp WHERE strftime('%Y-%m-%d %H:%M:S', date) BETWEEN  :startDate AND :endDate");
   $stmt->bindValue('startDate', $startDate, SQLITE3_TEXT);
   $stmt->bindValue('endDate', $endDate, SQLITE3_TEXT);
   $results = $stmt->execute();
 
   // prepare output
+  //
   $labels = [];
   $datasets = [];
 
