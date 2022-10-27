@@ -36,8 +36,8 @@ $config = [
           'name' => 'temp_2',
           'label' => 'Temperatur Garage',
           'yAxisID' => 'Yleft',
-          'backgroundColor' => 'lightblue',
-          'borderColor' => 'lightblue',
+          'backgroundColor' => 'darkblue',
+          'borderColor' => 'darkblue',
           'unit' => '°C',
 
         ],

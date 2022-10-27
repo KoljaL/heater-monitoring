@@ -12,8 +12,8 @@ require_once('../config.php');
  */
 class LnInterpolation {
   private $pDatas;
-  public $next_valueStore = 0;
-  public $prev_valueStore = 0;
+  public $next_valueStore = array();
+  public $prev_valueStore = array();
   public function __construct($dDatas) {
     $this->pDatas = $dDatas;
   }
@@ -22,56 +22,118 @@ class LnInterpolation {
   public function find($input) {
     $prev_key = null;
     $next_key = null;
+    $prev_keyIDrunner = 0;
+    $next_keyIDrunner = 0;
+
     foreach (array_keys($this->pDatas) as $key) {
       // pprint($this->pDatas[$key], '$this->pDatas[$key]');
       // pprint($key, '$key');
       // convert to timestamp for comparison
       if (strtotime($key) < strtotime($input)) {
         $prev_key = $key;
+        $prev_keyID = $prev_keyIDrunner;
       } else {
         //  already found next key, move on
         if ($next_key == null) {
           $next_key = $key;
+          $next_keyID = $next_keyIDrunner;
         }
       }
+      $prev_keyIDrunner++;
+      $next_keyIDrunner++;
     }
-    return array($prev_key, $next_key);
+    return array($prev_key, $prev_keyID, $next_key, $next_keyID);
   }
 
   public function calculate($input) {
     // pprint($input, '$input');
     //get previous and next keys
     global $next_valueStore, $prev_valueStore;
-    list($prev_key, $next_key) = $this->find($input);
+    list($prev_key, $prev_keyID, $next_key, $next_keyID) = $this->find($input);
     // pprint($prev_key, '$prev_key');
     // pprint($next_key, '$next_key');
     //get previous and next values
     $prev_value = $this->pDatas[$prev_key];
     $next_value = $this->pDatas[$next_key];
+    unset($prev_value['id']);
+    unset($next_value['id']);
     // pprint($prev_value, '$prev_value');
     // pprint($next_value, '$next_value');
     $return = array();
+    // $next_valueStore = array();
+    // $prev_valueStore = array();
+    // pprint($prev_value, '$prev_value');
+    // pprint($next_value, '$next_value');
+
     // loop over every value inside $prev and $next_value arrays
     for ($i = 0; $i < count($prev_value); $i++) {
       // pprint($next_value[array_keys($next_value)[$i]], '$next_value[array_keys($next_value)[$i]]');
+      // if ($prev_value[array_keys($prev_value)[$i]] === null) {
+      //   $sensorWithoutValue = array_keys($prev_value)[$i];
+      //   // pprint($i, '$i');
+      //   // pprint(array_keys($prev_value)[$i], 'array_keys($prev_value)[$i]');
+      //   // pprint($prev_value, '$prev_value');
+      //   // pprint($prev_keyID, '$prev_keyID');
+      //   $veryPrevValue = '';
+      //   if ($prev_keyID >= 1) {
+      //     // echo "<br><br>";
+      //     // pprint('IF KEY ID >1', '');
+      //     for ($j = $prev_keyID; $j > 1; $j--) {
+      //       // pprint($j, 'J');
+      //       // pprint($prev_keyID, '$prev_keyID');
+      //       // pprint($sensorWithoutValue, '$sensorWithoutValue');
+      //       if ($this->pDatas[array_keys($this->pDatas)[$j]][$sensorWithoutValue]) {
+      //         $veryPrevValue = $this->pDatas[array_keys($this->pDatas)[$j]][$sensorWithoutValue];
+      //         // pprint($veryPrevValue, '$veryPrevValue');
+      //         $prev_value[array_keys($prev_value)[$i]] = $veryPrevValue;
+      //         break;
+      //       } else {
+      //         // $prev_value[array_keys($prev_value)[$i]] = 99;
+      //       }
+      //     }
+      //   }
+      // }
 
-      // store values for case NULL
-      if ($next_value[array_keys($next_value)[$i]] === null) {
-        $next_value[array_keys($next_value)[$i]] = $next_valueStore;
+
+      // if ($next_value[array_keys($next_value)[$i]] === null) {
+      //   $sensorWithoutValue = array_keys($next_value)[$i];
+      //   // pprint($i, '$i');
+      //   // pprint(array_keys($next_value)[$i], 'array_keys($next_value)[$i]');
+      //   // pprint($next_value, '$next_value');
+      //   // pprint($next_keyID, '$next_keyID');
+      //   $veryPrevValue = '';
+      //   if ($next_keyID <= 400) {
+      //     // echo "<br><br>";
+      //     // pprint('IF KEY ID >1', '');
+      //     for ($j = $next_keyID; $j < 439; $j++) {
+      //       //   // pprint($j, 'J');
+      //       //   // pprint($next_keyID, '$next_keyID');
+      //       //   // pprint($sensorWithoutValue, '$sensorWithoutValue');
+      //       if ($this->pDatas[array_keys($this->pDatas)[$j]][$sensorWithoutValue]) {
+      //         $veryPrevValue = $this->pDatas[array_keys($this->pDatas)[$j]][$sensorWithoutValue];
+      //         // pprint($veryPrevValue, '$veryPrevValue');
+      //         $next_value[array_keys($next_value)[$i]] = $veryPrevValue;
+      //         break;
+      //       } else {
+      //         // $next_value[array_keys($next_value)[$i]] = 99;
+      //       }
+      //     }
+      //   }
+      // }
+
+      if ($next_value[array_keys($next_value)[$i]] === null || $prev_value[array_keys($prev_value)[$i]] === null) {
+        $temp2 = NULL;
       } else {
-        $next_valueStore = $next_value[array_keys($next_value)[$i]];
-      }
-      // store values for case NULL
-      if ($prev_value[array_keys($prev_value)[$i]] === null) {
-        $prev_value[array_keys($prev_value)[$i]] = $prev_valueStore;
-      } else {
-        $prev_valueStore = $prev_value[array_keys($prev_value)[$i]];
+        // perform linear interpolation calculation
+        $temp1 = ((strtotime($input) - strtotime($prev_key)) * ($next_value[array_keys($next_value)[$i]] - $prev_value[array_keys($prev_value)[$i]]) / (strtotime($next_key) - strtotime($prev_key)));
+        $temp2 = round($temp1 + $prev_value[array_keys($prev_value)[$i]], 2);
       }
 
-      // perform linear interpolation calculation
-      $temp = ((strtotime($input) - strtotime($prev_key)) * ($next_value[array_keys($next_value)[$i]] - $prev_value[array_keys($prev_value)[$i]]) / (strtotime($next_key) - strtotime($prev_key)));
-      $return[array_keys($next_value)[$i]] = round($temp + $prev_value[array_keys($prev_value)[$i]], 2);
+      $return[array_keys($next_value)[$i]] = $temp2;
     }
+    // pprint($return, '$return');
+    // pprint('', '');
+
     return $return;
   }
 }
@@ -226,3 +288,41 @@ class LnInterpolation {
 // }
 
 // print_r($result);
+
+
+
+
+
+
+
+
+////////////////////////////   OLD   //////////////////////////
+
+
+// store values for case NULL
+// if ($next_value[array_keys($next_value)[$i]] === null) {
+//   $next_value[array_keys($next_value)[$i]] = isset($next_valueStore[$i]) ?? 0;
+// } else {
+//   $next_valueStore[$i] = $next_value[array_keys($next_value)[$i]];
+// }
+// store values for case NULL
+// if ($prev_value[array_keys($prev_value)[$i]] === null) {
+//   $prev_value[array_keys($prev_value)[$i]] = isset($prev_valueStore[$i]) ?? 11;
+// } else {
+//   $prev_valueStore[$i] = $prev_value[array_keys($prev_value)[$i]];
+// }
+
+
+
+// INTERCHANGE VALUES -> no solution if both are NULL
+// if ($prev_value[array_keys($prev_value)[$i]] === null) {
+//   $prev_value[array_keys($prev_value)[$i]] = $next_value[array_keys($next_value)[$i]];
+// }
+// if ($next_value[array_keys($next_value)[$i]] === null) {
+//   $next_value[array_keys($next_value)[$i]] = $prev_value[array_keys($prev_value)[$i]];
+// }
+
+// if ($prev_value[array_keys($prev_value)[$i]] === null && $next_value[array_keys($next_value)[$i]] === null) {
+//   $prev_value[array_keys($prev_value)[$i]] = 99;
+//   $next_value[array_keys($next_value)[$i]] = 99;
+// }

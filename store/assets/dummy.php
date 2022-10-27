@@ -111,9 +111,9 @@ function dummyData($day, $esp) {
       // }
 
       // // no values in hours
-      // if ($h === 12 || $h === 18) {
-      //   continue;
-      // }
+      if ($h === 12 || $h === 18) {
+        continue;
+      }
 
       if ($sin < 100) {
         $sin--;
@@ -121,8 +121,8 @@ function dummyData($day, $esp) {
         $sin++;
       }
 
-      $sinus = round(10 + sin($sin / 10) * 20, 0);
-      $cosinus = round(20 + sin($sin / 10) * 20, 0);
+      $sinus = round(10 + sin($sin / 100) * 20, 0);
+      $cosinus = round(20 + cos($sin / 100) * 20, 0);
 
       // date 
       $date = "'" . $day . ' ' . $h . ":" . $m . ":00'";

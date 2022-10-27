@@ -52,6 +52,8 @@ if (isset($_GET['ESP'])) {
   // $res = fetchValues($esp, $startDate, $endDate);
   //print_r($res);
   $sensors = $config['ESP'][$esp]['sensors'];
+
+
   if ($esp === 'haus_one') {
     $res = interpolate();
   } else {
@@ -111,6 +113,24 @@ function interpolate() {
 
   /**
    *
+   * filling missing values
+   *
+   */
+  foreach ($data as $key => $time) {
+    // if ($key === 0) { continue; }
+    foreach ($time as $k => $v) {
+      if ($v === NULL) {
+        $data[$key][$k] = isset($timeStore[$k]) ? $timeStore[$k] : 0;
+      }
+    }
+    $timeStore = $data[$key];
+  }
+  // pprint($data, '$data');
+
+
+
+  /**
+   *
    * get array properties
    *
    */
@@ -119,7 +139,7 @@ function interpolate() {
   $lastDate = array_keys($data)[$countArray - 1];
   // pprint($countArray, '$countArray');
   // pprint($firstDate, '$firstDate');
-// pprint($lastDate, '$lastDate');
+  // pprint($lastDate, '$lastDate');
   // pprint($data, '$data');
 
 
@@ -151,12 +171,17 @@ function interpolate() {
   foreach ($resampleArray as $value) {
     $outputArray[$value] = $vInterpolation->calculate($value);
   }
-  $countOutput = count($outputArray);
+  // $countOutput = count($outputArray);
   // pprint($countOutput, '$countOutput');
-// pprint($outputArray, '$outputArray');
+  // pprint($outputArray, '$outputArray');
 
 
 
+  /**
+   * 
+   * combine labels wit data
+   *
+   */
   $labels = array_keys($outputArray);
   // pprint($labels, '$labels');
   $datasets = [];
@@ -176,7 +201,7 @@ function interpolate() {
   }
   // pprint($datasets, '$datasets');
   return ['labels' => $labels, 'datasets' => $datasets];
-}
+} // function interpolate
 
 
 
@@ -211,4 +236,4 @@ function output() {
     }
   }
   return ['labels' => $labels, 'datasets' => $datasets];
-}
+} // function output
