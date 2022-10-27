@@ -45,7 +45,7 @@ function removeDB() {
  * 
  * store.php?initDB
  * 
- */ 
+ */
 function initDB($esp) {
   global $db, $config;
   $sensors = $config['ESP'][$esp]['sensors'];
@@ -53,7 +53,8 @@ function initDB($esp) {
   $db->exec("ALTER TABLE $esp ADD COLUMN date DATETIME DEFAULT '0' ");
   foreach ($sensors as $sensor) {
     $sensorName = $sensor['name'];
-    $db->exec("ALTER TABLE $esp ADD COLUMN $sensorName INTEGER NOT NULL DEFAULT '0' ");
+    $db->exec("ALTER TABLE $esp ADD COLUMN $sensorName TEXT ");
+    // $db->exec("ALTER TABLE $esp ADD COLUMN $sensorName INTEGER NOT NULL DEFAULT '0' ");
   }
   echo "<h2>Database for $esp initialized</h2>";
 }
@@ -70,7 +71,7 @@ function initDB($esp) {
  * store.php?dummyData
  * 
  */
-function createDummyData($esp){
+function createDummyData($esp) {
   global $db, $config;
   $datem2 = date("Y-m-d", mktime(0, 0, 0, date("m"), date("d") - 2, date("Y")));
   $datem1 = date("Y-m-d", mktime(0, 0, 0, date("m"), date("d") - 1, date("Y")));
@@ -78,18 +79,18 @@ function createDummyData($esp){
   $datep1 = date("Y-m-d", mktime(0, 0, 0, date("m"), date("d") + 1, date("Y")));
   $datep2 = date("Y-m-d", mktime(0, 0, 0, date("m"), date("d") + 2, date("Y")));
 
-  dummyData($datem2,$esp);
-  dummyData($datem1,$esp);
-  dummyData($date0,$esp);
-  dummyData($datep1,$esp);
-  dummyData($datep2,$esp);
+  // dummyData($datem2, $esp);
+  // dummyData($datem1, $esp);
+  dummyData($date0, $esp);
+  // dummyData($datep1, $esp);
+  // dummyData($datep2, $esp);
   echo "insert dummy values<br>";
 }
 
 
 
 
-function dummyData($day,$esp) {
+function dummyData($day, $esp) {
   global $db;
   $i = 0;
   // hours
@@ -98,21 +99,21 @@ function dummyData($day,$esp) {
       $h = "0" . $h;
     }
     // minutes
-    for ($m = 0; $m < 60; $m += 5) {
+    for ($m = 0; $m < 60; $m += 1) {
       if ($m < 10) {
         $m = "0" . $m;
       }
 
       // randomly add no value
-      if (rand(1, 5) > 3) {
-        // echo "'2022-10-" . $day . ' ' . $h . ":" . $m . ":00'<br>";
-        continue;
-      }
+      // if (rand(1, 5) > 3) {
+      //   // echo "'2022-10-" . $day . ' ' . $h . ":" . $m . ":00'<br>";
+      //   continue;
+      // }
 
       // no values in hours
-      if ($h === 12 || $h === 18) {
-        continue;
-      }
+      // if ($h === 12 || $h === 18) {
+      //   continue;
+      // }
 
 
       // date 
@@ -131,9 +132,30 @@ function dummyData($day,$esp) {
         $hum_2 = "'" . rand(30, 80) . "'";
       }
 
+      $array = [
+        'temp_1' => $temp_1,
+        'temp_2' => $temp_2,
+        'hum_1' => $hum_1,
+        'hum_2' => $hum_2,
+      ];
 
+
+      // remove random key value from $array
+      $keyToUnlink = array_keys($array)[rand(0, 3)];
+      unset($array[$keyToUnlink]);
+      // print_r($array);
+
+      // make strings from array
+      $columns = '(' . implode(',', array_keys($array)) . ',date)';
+      $values = "(" . implode(",", $array) . "," . $date . ")";
+      // print_r($columns);
+      // print_r($values);
+
+
+      // exit;
       // insert into DB
-      $statement = $db->prepare("insert into $esp ('temp_1', 'temp_2', 'hum_1', 'hum_2','date')  values ($temp_1, $temp_2, $hum_1, $hum_2,$date)");
+      $statement = $db->prepare("INSERT INTO $esp" . $columns. " VALUES". $values);
+      // $statement = $db->prepare("insert into $esp ('temp_1', 'temp_2', 'hum_1', 'hum_2','date')  values ($temp_1, $temp_2, $hum_1, $hum_2,$date)");
       $statement->execute();
       $i++;
       // OUTPUT

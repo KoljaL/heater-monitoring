@@ -79,8 +79,9 @@ if (isset($_GET['initDB'])) {
   //
   foreach ($sensors as $sensor) {
     $sensorName = $sensor['name'];
-    if ($db->exec("ALTER TABLE $esp ADD COLUMN $sensorName INTEGER NOT NULL DEFAULT '0' ")) {
-      echo "<h2>ALTER TABLE $esp ADD COLUMN $sensorName INTEGER NOT NULL DEFAULT '0' </h2>";
+    // if ($db->exec("ALTER TABLE $esp ADD COLUMN $sensorName INTEGER NOT NULL DEFAULT '0' ")) {
+    if($db->exec("ALTER TABLE $esp ADD COLUMN $sensorName TEXT ")) {
+      echo "<h2>ALTER TABLE $esp ADD COLUMN $sensorName TEXT </h2>";
     }
   }
   echo "<h2>Database initialized</h2>";

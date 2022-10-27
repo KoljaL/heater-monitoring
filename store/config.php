@@ -1,6 +1,7 @@
 <?php
 
 $config = [
+'date_default_timezone_set'=>'Europe/Berlin',
   'db_file' => 'db.sqlite',
   'ESP' => [
     'haus_one' => [
@@ -113,3 +114,22 @@ $config = [
     ]
   ]
 ];
+
+
+/**
+ * 
+ * 
+ * FUNCTIONS
+ * 
+ * 
+ */
+
+
+function pprint($value, $name = '') {
+echo "<pre style='margin:.5rem;padding:.2rem;padding-inline:1rem;background:#ccc;border:1px solid black;border-radius:.5rem;color:#000; width:max-content;font-family: Courier, monospace;font-size:.9rem;'>";
+  echo "<b>" . $name . "</b> ";
+  echo (is_string($value) || is_numeric($value)) ? '' : '<br><br>';
+  print_r($value);
+  echo "<br>";
+  echo "</pre>";
+}
