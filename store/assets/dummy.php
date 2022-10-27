@@ -5,7 +5,7 @@ error_reporting(E_ALL);
 
 echo "<pre>";
 // localhost:9090/store.php?ESP=haus_one&temp_1=10&temp_2=29&hum_1=40
-include 'config.php';
+include '../config.php';
 date_default_timezone_set('Europe/Berlin');
 
 
@@ -93,43 +93,51 @@ function createDummyData($esp) {
 function dummyData($day, $esp) {
   global $db;
   $i = 0;
+  $sin = 0;
   // hours
   for ($h = 0; $h < 24; $h++) {
     if ($h < 10) {
       $h = "0" . $h;
     }
     // minutes
-    for ($m = 0; $m < 60; $m += 1) {
+    for ($m = 0; $m < 60; $m += 3) {
       if ($m < 10) {
         $m = "0" . $m;
       }
 
-      // randomly add no value
+      // // randomly add no value
       // if (rand(1, 5) > 3) {
-      //   // echo "'2022-10-" . $day . ' ' . $h . ":" . $m . ":00'<br>";
       //   continue;
       // }
 
-      // no values in hours
+      // // no values in hours
       // if ($h === 12 || $h === 18) {
       //   continue;
       // }
 
+      if ($sin < 100) {
+        $sin--;
+      } else {
+        $sin++;
+      }
+
+      $sinus = round(10 + sin($sin / 10) * 20, 0);
+      $cosinus = round(20 + sin($sin / 10) * 20, 0);
 
       // date 
       $date = "'" . $day . ' ' . $h . ":" . $m . ":00'";
 
       // values
       if ($esp === 'haus_one') {
-        $temp_1 = "'" . rand(10, 20) . "'";
-        $temp_2 = "'" . rand(20, 30) . "'";
-        $hum_1 = "'" . rand(50, 60) . "'";
-        $hum_2 = "'" . rand(70, 80) . "'";
+        $temp_1 = "'" . $sinus . "'";
+        $temp_2 = "'" . $cosinus . "'";
+        $hum_1 = "'" . rand(2, 2) . "'";
+        $hum_2 = "'" . rand(3, 3) . "'";
       } else {
-        $temp_1 = "'" . rand(20, 30) . "'";
-        $temp_2 = "'" . rand(40, 60) . "'";
-        $hum_1 = "'" . rand(40, 60) . "'";
-        $hum_2 = "'" . rand(30, 80) . "'";
+        $temp_1 = "'" . $sinus . "'";
+        $temp_2 = "'" . $cosinus . "'";
+        $hum_1 = "'" . rand(2, 2) . "'";
+        $hum_2 = "'" . rand(3, 3) . "'";
       }
 
       $array = [
@@ -141,7 +149,7 @@ function dummyData($day, $esp) {
 
 
       // remove random key value from $array
-      $keyToUnlink = array_keys($array)[rand(0, 3)];
+      $keyToUnlink = array_keys($array)[rand(0, 1)];
       unset($array[$keyToUnlink]);
       // print_r($array);
 
@@ -154,7 +162,7 @@ function dummyData($day, $esp) {
 
       // exit;
       // insert into DB
-      $statement = $db->prepare("INSERT INTO $esp" . $columns. " VALUES". $values);
+      $statement = $db->prepare("INSERT INTO $esp" . $columns . " VALUES" . $values);
       // $statement = $db->prepare("insert into $esp ('temp_1', 'temp_2', 'hum_1', 'hum_2','date')  values ($temp_1, $temp_2, $hum_1, $hum_2,$date)");
       $statement->execute();
       $i++;

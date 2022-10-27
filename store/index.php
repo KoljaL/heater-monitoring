@@ -4,7 +4,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 echo "<pre>";
 // localhost:9090/store.php?ESP=haus_one&temp_1=10&temp_2=29&hum_1=40
-include 'config.php';
+include '../config.php';
 date_default_timezone_set('Europe/Berlin');
 
 

@@ -13,7 +13,7 @@
   <script src="js/chartJS-zoom.js"></script>
   <script src="js/easepick.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-crosshair@1.2.0/dist/chartjs-plugin-crosshair.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/1.3.1/chartjs-plugin-annotation.min.js"></script>
+  <script src="js/chartJS-annotation.js"></script>
   <link rel="shortcut icon"
     href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAABMpJREFUWIXtl3mIVWUYxn/ve5Z7RueOzcw1x1HzuhQ1LpkmqBWOjWmZZZJDEC0qLSQaYVImtNBGC2NlG4L5nxASRRRBC/2hBVpktos5WjNjTGY2jc5yl3Pe/phzm1FnTIgb/tEDB77v+Z7zPc/3nu07cDIUeNz3/clxf53rujPj9mhVfbmPdqnjONfH7VLgpbKysoq4P09V747bs1T1gX68TobruvOAb4CE53kXAz8BSQBV3ayqjwGkUqmkiHQAo+Oxe0XkzcI8ItLouu7cuP254zg39OenJxKe5+0RkSrf98fncrn9qppwXXcSgOM4O4EFAIcPH+4Qkb2e580F8H3/C2BWKpUqhP2soFXVncBVpxWgpKSkDfgziqJUOp3uNLNDZjYMwMwazWx4LI3M7EAYhsPjsRYg0dXVNSju74uiqDDWWGj/IxKJxLnAsjjMSOAuQOIKLAJmAKTT6QC4HwgAXNedBSzsM9UqYHh83u3A2P78nBMroqrXiEhkZl/n8/n2ZDJ5LJvNrgBmJxKJxnw+vx2gra2tSlUnqGqFme2Joqi5urq6paOj4z4zm+N53h9RFG2LK3DUdd36KIpagSMDrl5V75xSMsQmBWXmOM7ymF45pWSILSgbZsCWmBviqrbeVpG2miBpqrom5i84y/FsRWqMAa0A9fX1jog031w+ykTk50I1B8Izj1fV2CNV5xvwEbAaePOOyrRtHjXVgC+A1aq6sbY0ZTZlsX047hITkcZY+9Q4f7A11cw3oD3m1rqIRRdeZwpGfMkKcAdKMm1ied30iVr31fe/w8Ee7rwxpVPrZpRO3XegFf2u5/4NxGFohT92yZVnN/za2szu7T3aksBJLq8/p+FY2wG2vDPwik96Cgq44tJhrF87gmtn9wk1qZzn1o3hloXHa0ePGMQLD57P6pt7ueRglw0PTebRFQObnzLAf4X/A5wZAXzfX+w4zkfATcU2FJFtqvpi4aupQRDMSQ4K3li97Oq6WReOO7339b/AE2tunX7Z1PErjx49uhVAs9nskiULa/XSaTVUDBlcbH+mTZnA7dfPxvecy8vKyio0iqJgUEmi6Ma9EFzHwXddaW9vD1zA3n7/Uz7Z+SVNLYeY4Y8sqv3DDZvJdXfQlckCmJtIJJ7e3/TLqP1NtACVVLGomAF27Pr+RmBT/Ilu1Uwm8yOwH9gN7C2meYy3gFwYhh8Adma8B/4P0B9y+YiOrohsvpcL80Znd0gmd7w2jIyOrpDuTC9nBp1dIV3dpw4w4IakYdPesGETEaB3VPbsHbe+1xJtfa8lBHR+snc/uevbtuisiz4OARnn98z525GMJSe/mwfEPYXPcRVQ1bA9ytEe5lHVJwEfuMd6Ja8Dvud5M/dmjnE4n2FH5xFE5N1YO7mP9hDgp9PppAnRL/luDEIg6i/Iq/RsoyeIyEERaQYuAHAcZylgAqaqG/8uneuuV5FuEfnB9/2JAEEQjAbyAiYi+/osbIOIZFX1+ZhqA1KFiZ4FckDW87xlcVVOvDeC+DiOr62t7a+0fqx1+9OqahMQicifQDnAa+urJ9mdlWkD1lB8dDbXXGmVjm9ANar6Sqk6Foiaqq4qtruItFU6vikSAkMLv1jV8XHin1IxUB57DQX4C43VkIwDmXPyAAAAAElFTkSuQmCC" />
   <style>
@@ -32,7 +32,6 @@
 
     h1 {
       font-family: Verdana, Geneva, Tahoma, sans-serif;
-
       margin: 0;
     }
 
@@ -183,7 +182,7 @@
     </div>
   </div>
   <div class="dbLinks">
-    <a target="_blank" href="./store/dummy.php">reset Database</a>
+    <a target="_blank" href="./store/assets/dummy.php">reset Database</a>
   </div>
 
   <script>
@@ -274,23 +273,6 @@
       })
     } // noFF
 
-
-    // const animation = {
-
-    //   y: {
-    //     type: 'number',
-    //     easing: 'easeOutQuad',
-    //     duration: 100,
-    //     from: NaN,
-    //     delay(ctx) {
-    //       if (ctx.type !== 'data' || ctx.yStarted) {
-    //         return 0;
-    //       }
-    //       ctx.yStarted = true;
-    //       return ctx.index * 1;
-    //     }
-    //   }
-    // };
 
     /**
      * 
@@ -384,22 +366,22 @@
         },
         plugins: {
           tooltip: {
-            mode: 'interpolate',
-            intersect: false,
-            // animation: false,
-            // usePointStyle: true,
-            // enabled: true,
-            // position: 'average',
-            // bodyColor: 'white',
-            // callbacks: {
-            //   label: function (context) {
-            //     let unit = context.dataset.unit || '';
-            //     let label = context.dataset.label || '';
-            //     let value = context.parsed.y || '';
-            //     // console.log(context)
-            //     return label + ' ' + value + ' ' + unit;
-            //   }
-            // }
+            // mode: 'interpolate',
+            // intersect: true,
+            animation: true,
+            usePointStyle: true,
+            enabled: true,
+            position: 'average',
+            bodyColor: 'white',
+            callbacks: {
+              label: function (context) {
+                let unit = context.dataset.unit || '';
+                let label = context.dataset.label || '';
+                let value = context.parsed.y || '';
+                // console.log(context)
+                return label + ' ' + value + ' ' + unit;
+              }
+            }
           },
           zoom: {
             limits: {
@@ -424,6 +406,7 @@
             }
           },
           annotation: {
+            drawTime: 'beforeDraw',
             annotations: {},
           },
           crosshair: {
@@ -431,11 +414,11 @@
               color: '#F66',  // crosshair line color
               width: 1        // crosshair line width
             },
-            sync: {
-              enabled: true,            // enable trace line syncing with other charts
-              group: 1,                 // chart group
-              suppressTooltips: false   // suppress tooltips when showing a synced tracer
-            },
+            // sync: {
+            //   enabled: true,            // enable trace line syncing with other charts
+            //   group: 1,                 // chart group
+            //   suppressTooltips: false   // suppress tooltips when showing a synced tracer
+            // },
             // zoom: {
             //   enabled: true,                                      // enable zooming
             //   zoomboxBackgroundColor: 'rgba(66,133,244,0.2)',     // background color of zoom box 
@@ -443,13 +426,13 @@
             //   zoomButtonText: 'Reset Zoom',                       // reset zoom button text
             //   zoomButtonClass: 'reset-zoom',                      // reset zoom button class
             // },
-            callbacks: {
-              beforeZoom: () => function (start, end) {                  // called before zoom, return false to prevent zoom
-                return true;
-              },
-              afterZoom: () => function (start, end) {                   // called after zoom
-              }
-            }
+            // callbacks: {
+            //   beforeZoom: () => function (start, end) {                  // called before zoom, return false to prevent zoom
+            //     return true;
+            //   },
+            //   afterZoom: () => function (start, end) {                   // called after zoom
+            //   }
+            // }
           },
         },
       }
@@ -583,7 +566,7 @@
      */
     async function fetchNewDataEasePick() {
       location.hash = startDate + ':' + endDate;
-      const response = await fetch(`./store/fetch.php?ESP=${ESP}&startDate=${startDate}&endDate=${endDate}`);
+      const response = await fetch(`./store/assets/fetch.php?ESP=${ESP}&startDate=${startDate}&endDate=${endDate}`);
       const data = await response.json();
       console.log(data)
       lineChart.config.options.scales.x.min = startDate + " 00:00:00"
@@ -629,7 +612,7 @@
      * 
      */
     async function getConfig() {
-      const response = await fetch(`./store/fetch.php?config`);
+      const response = await fetch(`./store/assets/fetch.php?config`);
       const data = await response.json();
       return data
     }
@@ -649,7 +632,7 @@
       ESP = Object.keys(configPHP)[0]
       ESPdropdown(Object.keys(configPHP));
 
-      const responseD = await fetch(`./store/fetch.php?ESP=${ESP}&startDate=${startDate}&endDate=${endDate}`);
+      const responseD = await fetch(`./store/assets/fetch.php?ESP=${ESP}&startDate=${startDate}&endDate=${endDate}`);
       const data = await responseD.json();
       console.info('data', data)
       config.options.scales.x.min = startDate + " 00:00:00"
