@@ -79,11 +79,11 @@ function createDummyData($esp) {
   $datep1 = date("Y-m-d", mktime(0, 0, 0, date("m"), date("d") + 1, date("Y")));
   $datep2 = date("Y-m-d", mktime(0, 0, 0, date("m"), date("d") + 2, date("Y")));
 
-  // dummyData($datem2, $esp);
-  // dummyData($datem1, $esp);
+  dummyData($datem2, $esp);
+  dummyData($datem1, $esp);
   dummyData($date0, $esp);
-  // dummyData($datep1, $esp);
-  // dummyData($datep2, $esp);
+  dummyData($datep1, $esp);
+  dummyData($datep2, $esp);
   echo "insert dummy values<br>";
 }
 
