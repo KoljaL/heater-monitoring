@@ -1,5 +1,4 @@
 <?php
-use function CommonMark\Render\HTML;
 
 $config = [
   'date_default_timezone_set' => 'Europe/Berlin',
