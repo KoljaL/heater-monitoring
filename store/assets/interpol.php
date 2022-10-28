@@ -201,38 +201,120 @@ class LnInterpolation {
 
 // echo '<b>Total Execution Time:</b> ' . round(microtime(true) - $time_start, 2) . 's ';
 
+// /**
+//  *
+//  * INTERPOLATE
+//  *
+//  */
+// function interpolate() {
+// global $sensors, $db, $startDate, $endDate, $esp;
+// // pprint($db, '$db');
+
+// // fetch data from DB
+// $stmt = $db->prepare("SELECT * FROM $esp WHERE strftime('%Y-%m-%d %H:%M:S', date) BETWEEN :startDate AND :endDate");
+// $stmt->bindValue('startDate', $startDate, SQLITE3_TEXT);
+// $stmt->bindValue('endDate', $endDate, SQLITE3_TEXT);
+// $results = $stmt->execute();
 
 
-/**
- * 
- * resample without interpolation
- * 
- */
-// $arr = [
-//   ['date' => '2017-09-01', 'total' => 4],
-//   ['date' => '2017-09-07', 'total' => 6],
-//   ['date' => '2017-09-09', 'total' => 7]
-// ];
-
-// $result = [];
-// foreach ($arr as $k => $item) {
-//   $d = new DateTime($item['date']);
-//   $result[] = $item;
-//   if (isset($arr[$k + 1])) {
-//     $diff = (new DateTime($arr[$k + 1]['date']))->diff($d)->days;
-//     if ($diff > 1) {
-//       $result = array_merge($result, array_map(function ($v) use ($d) {
-//         $d_copy = clone $d;
-//         return [
-//           'date' => $d_copy->add(new DateInterval('P' . $v . 'D'))->format('Y-m-d'),
-//           'total' => 0
-//         ];
-//       }, range(1, $diff - 1)));
-//     }
-//   }
+// $data = [];
+// while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
+// $date = $row['date'];
+// unset($row['date']);
+// $data[$date] = $row;
 // }
 
-// print_r($result);
+// /**
+//    *
+//    * filling missing values
+//    *
+//    */
+// foreach ($data as $key => $time) {
+// // if ($key === 0) { continue; }
+// foreach ($time as $k => $v) {
+// if ($v === NULL) {
+// $data[$key][$k] = isset($timeStore[$k]) ? $timeStore[$k] : 0;
+// }
+// }
+// $timeStore = $data[$key];
+// }
+// // pprint($data, '$data');
+
+
+
+// /**
+// *
+// * get array properties
+// *
+// */
+// $countArray = count($data);
+// $firstDate = array_keys($data)[1];
+// $lastDate = array_keys($data)[$countArray - 1];
+// // pprint($countArray, '$countArray');
+// // pprint($firstDate, '$firstDate');
+// // pprint($lastDate, '$lastDate');
+// // pprint($data, '$data');
+
+
+// /**
+// *
+// * create DatePeriod & resampleArray
+// *
+// */
+// $firstDate = new DateTime($firstDate);
+// $lastDate = new DateTime($lastDate);
+// $DatePeriod = new DatePeriod($firstDate, new DateInterval('PT1M'), $lastDate);
+// // pprint($range, '$range');
+// $resampleArray = array();
+// foreach ($DatePeriod as $dt) {
+// $resampleArray[] = $dt->format('Y-m-d H:i:s');
+// }
+// // pprint($resampleArray, '$resampleArray');
+
+
+
+// /**
+// *
+// * start Interpolation
+// *
+// */
+// $vInterpolation = new LnInterpolation($data);
+// // pprint($vInterpolation, '$vInterpolation');
+// $outputArray = array();
+// foreach ($resampleArray as $value) {
+// $outputArray[$value] = $vInterpolation->calculate($value);
+// }
+// // $countOutput = count($outputArray);
+// // pprint($countOutput, '$countOutput');
+// // pprint($outputArray, '$outputArray');
+
+
+
+// /**
+// *
+// * combine labels wit data
+// *
+// */
+// $labels = array_keys($outputArray);
+// // pprint($labels, '$labels');
+// $datasets = [];
+
+// foreach ($sensors as $key => $value) {
+// $datasets[$key]['label'] = $value['label'];
+// $datasets[$key]['name'] = $value['name'];
+// $datasets[$key]['yAxisID'] = $value['yAxisID'];
+// $datasets[$key]['unit'] = $value['unit'];
+// $datasets[$key]['backgroundColor'] = $value['backgroundColor'];
+// $datasets[$key]['borderColor'] = $value['borderColor'];
+
+// foreach ($outputArray as $k => $v) {
+// // pprint($v[$value['name']]);
+// $datasets[$key]['data'][] = $v[$value['name']];
+// }
+// }
+// // pprint($datasets, '$datasets');
+// return ['labels' => $labels, 'datasets' => $datasets];
+// } // function interpolate
 
 
 

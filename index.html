@@ -447,16 +447,14 @@
       lineChart.data.labels.forEach(step => {
         if (step.slice(8, 10) !== stepRunner) {
           stepRunner = step.slice(8, 10)
-
           let date = step.slice(0, 10) + ' 00:00:00'
-
           i++
-          console.log(date)
+          // console.log(date)
           lineChart.options.plugins.annotation.annotations[line + i] = {
             type: 'line',
             xMin: new Date(date).valueOf(),
             xMax: new Date(date).valueOf(),
-            borderColor: 'rgba(0, 0, 0, 0.2)',
+            borderColor: 'rgba(0, 0, 0, 0.5)',
             // label: {
             //   position: 'start',
             //   color: 'rgba(0, 0, 0, 0.5)',
@@ -467,12 +465,12 @@
           }
         }
       });
-
-
-      console.log(config.options.plugins.annotation.annotations)
+      // console.log(config.options.plugins.annotation.annotations)
       lineChart.update();
-
     }
+
+
+
     /**
      * 
      * tick format for x axis
@@ -482,15 +480,12 @@
     function timeFormat(time) {
       // console.log(time)
       // console.log(tickRunner)
-
-
       if (tickRunner !== time.slice(0, 2)) {
         tickRunner = time.slice(0, 2);
         // console.log(tickRunner)
         // console.log(time.slice(0, 10))
         return time.slice(0, 10)
       } else {
-
         return time.slice(-5)
       }
 
@@ -627,7 +622,7 @@
      */
     async function initChart() {
       const configPHP = await getConfig();
-      console.info('configPHP', configPHP)
+      // console.info('configPHP', configPHP)
 
       ESP = Object.keys(configPHP)[0]
       ESPdropdown(Object.keys(configPHP));
