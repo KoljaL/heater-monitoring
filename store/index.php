@@ -1,30 +1,39 @@
 <?php
-// ini_set('display_errors', 1);
-// ini_set('display_startup_errors', 1);
-// error_reporting(E_ALL);
-// echo "<pre>";
-// localhost:9090/store.php?ESP=haus_one&temp_1=10&temp_2=29&hum_1=40
-// date_default_timezone_set('Europe/Berlin');
+/**
+ * 
+ * file to get values from url and save to database
+ * 
+ * http://localhost:9090/store/?ESP=EG_1&WZ_TR=10&WZ_HK1_VL=29&WZ_HK1_RL=40
+ * 
+ * to initialize database: http://localhost:9090/store/?initDB&ESP=EG_1
+ * 
+ */
 
-include '../functions.php';
+include 'assets/functions.php';
 $config = getConfig();
-
-
 // print_r($_GET);
 // print_r($config['ESP']);
-
-
 // exit;
 
 
 /**
  * 
- * get ESP name from URL
+ * get ESP name from URL or call initDB function
  * 
  */
 if (isset($_GET['ESP'])) {
   $esp = $_GET['ESP'];
-} else {
+}
+
+// init database
+elseif (isset($_GET['initDB'])) {
+  echo '<h2>create new database</h2>';
+  initDB();
+  exit;
+}
+
+// throw error 
+else {
   echo '<h2>no ESP name in URL</h2>';
   exit;
 }
@@ -48,68 +57,34 @@ if (isset($config['ESP'][$esp]['sensors'])) {
 
 /**
  * 
- * create database file
+ * connect to database 
  * 
  */
-// $db = new SQLite3($config['db_file']);
-$db = new PDO('sqlite:' . $config['db_file']);
+$db = new PDO('sqlite:assets/' . $config['db_file']);
 
 
-/**
- * 
- * initialize database
- * 
- * store/?initDB
- * 
- */
-if (isset($_GET['initDB'])) {
-
-  // create table
-  //
-  if ($db->exec("CREATE TABLE IF NOT EXISTS $esp(id INTEGER PRIMARY KEY AUTOINCREMENT)")) {
-    echo "<h2>CREATE TABLE IF NOT EXISTS $esp(id INTEGER PRIMARY KEY AUTOINCREMENT)</h2>";
-  }
-
-  // create date column
-  //
-  if ($db->exec("ALTER TABLE $esp ADD COLUMN date DATETIME DEFAULT CURRENT_TIMESTAMP")) {
-    echo "<h2>ALTER TABLE $esp ADD COLUMN date DATETIME DEFAULT CURRENT_TIMESTAMP</h2>";
-  }
-
-  // create a column for every sensor
-  //
-  foreach ($sensors as $sensor) {
-    $sensorName = $sensor['name'];
-    // if ($db->exec("ALTER TABLE $esp ADD COLUMN $sensorName INTEGER NOT NULL DEFAULT '0' ")) {
-    if ($db->exec("ALTER TABLE $esp ADD COLUMN $sensorName TEXT ")) {
-      echo "<h2>ALTER TABLE $esp ADD COLUMN $sensorName TEXT </h2>";
-    }
-  }
-  echo "<h2>Database initialized</h2>";
-  exit;
-}
 
 
 /**
  * 
  * insert values
  * 
- * store/?saveValues&ESP=haus_one&temp_1=10&temp_2=29&hum_1=40
+ * http://localhost:9090/store/?ESP=EG_1&WZ_TR=10&WZ_HK1_VL=29&WZ_HK1_RL=40
  * 
  */
-if (isset($_GET['saveValues'])) {
-  unset($_GET['ESP']);
-  $array = array();
-  $placeholder = array();
-  $date = date("Y-m-d H:i:s");
+unset($_GET['ESP']);
+$array = array();
+$placeholder = array();
 
-  // match GET values to sensors
-  //
-  foreach ($sensors as $sensor) {
+// match GET values to sensors from config
+//
+foreach ($sensors as $sensor) {
 
-    // assign GET value or 0
+  if (isset($_GET[$sensor['name']])) {
+
+    // assign GET value
     //
-    $array[$sensor['name']] = $_GET[$sensor['name']] ?? 0;
+    $array[$sensor['name']] = $_GET[$sensor['name']];
 
     // remove all characters except: 0-9 , .
     //
@@ -119,30 +94,90 @@ if (isset($_GET['saveValues'])) {
     //
     $placeholder[] = '?';
   }
+}
 
-  // print_r($array);
+// add date to array
+//
+$array['date'] = date("Y-m-d H:i:s");
 
-  // make strings from arrays
+
+// make strings from arrays
+//
+$columns = '(' . implode(',', array_keys($array)) . ')';
+$placeholder = '(' . implode(',', $placeholder) . ',?)';
+
+
+// pprint($array, '$array');
+// pprint($columns, '$columns');
+// pprint($placeholder, 'placeholder');
+// pprint(array_values($array), 'array_values($array)');
+
+
+// prepare statement
+//
+$statement = $db->prepare("INSERT INTO $esp" . $columns . " VALUES" . $placeholder);
+
+
+// try to execute or catch error
+//
+try {
+  $statement->execute(array_values($array));
+  $id = $db->lastInsertId();
+  echo "<h2>values inserted in row $id</h2>";
+  pprint($array);
+} catch (\Throwable $th) {
+  throw $th;
+}
+exit;
+
+
+
+
+/**
+ * 
+ * initialize database
+ * 
+ * store/?initDB
+ * 
+ */
+function initDB() {
+  global $config;
+  $db = new PDO('sqlite:assets/' . $config['db_file']);
+
+
+  // get all ESP from config for the loop
   //
-  $columns = '(' . implode(',', array_keys($array)) . ',date)';
-  $placeholder = '(' . implode(',', $placeholder) . ',?)';
-  // $values = "('" . implode("','", $array) . "','" . $date . "')";
-
-  // echo $columns . "<br>" . $values . "<br>" . $placeholder . "<br>";
+  $ESPtables = $config['ESP'];
+  foreach ($ESPtables as $esp) {
 
 
-  // prepare statement
-  //
-  $statement = $db->prepare("INSERT INTO $esp" . $columns . " VALUES" . $placeholder);
+    // create a table for every ESP
+    //
+    $espName = $esp['name'];
+    if ($db->exec("CREATE TABLE IF NOT EXISTS $espName (id INTEGER PRIMARY KEY AUTOINCREMENT)")) {
+      echo "<h2>CREATE TABLE IF NOT EXISTS $espName (id INTEGER PRIMARY KEY AUTOINCREMENT)</h2>";
+    }
 
-  // try to execute or catch error
-  try {
-    $statement->execute(array_values($array));
-    $id = $db->lastInsertId();
-    echo "<h2>values inserted in row $id</h2>";
-    print_r($array);
-  } catch (\Throwable $th) {
-    throw $th;
+
+    // create date column
+    //
+    if ($db->exec("ALTER TABLE $espName ADD COLUMN date DATETIME DEFAULT CURRENT_TIMESTAMP")) {
+      echo "<h2>ALTER TABLE $espName ADD COLUMN date DATETIME DEFAULT CURRENT_TIMESTAMP</h2>";
+    }
+
+
+    // create a column for every sensor
+    //
+    foreach ($esp['sensors'] as $sensor) {
+      // pprint($sensor);
+      $sensorName = $sensor['name'];
+      if ($db->exec("ALTER TABLE $espName ADD COLUMN $sensorName TEXT ")) {
+        echo "<h2>ALTER TABLE $espName ADD COLUMN $sensorName TEXT </h2>";
+      }
+
+    }
+    echo "<h2>database table for $espName initialized</h2>";
+
   }
   exit;
 }
@@ -151,7 +186,29 @@ if (isset($_GET['saveValues'])) {
 
 //////////////////////////////////  FUNCTIONS  //////////////////////////////////
 
+// // create table
+// //
+// if ($db->exec("CREATE TABLE IF NOT EXISTS $esp(id INTEGER PRIMARY KEY AUTOINCREMENT)")) {
+//   echo "<h2>CREATE TABLE IF NOT EXISTS $esp(id INTEGER PRIMARY KEY AUTOINCREMENT)</h2>";
+// }
 
+// // create date column
+// //
+// if ($db->exec("ALTER TABLE $esp ADD COLUMN date DATETIME DEFAULT CURRENT_TIMESTAMP")) {
+//  echo "<h2>ALTER TABLE $esp ADD COLUMN date DATETIME DEFAULT CURRENT_TIMESTAMP</h2>";
+// }
+
+// // create a column for every sensor
+// //
+// foreach ($sensors as $sensor) {
+//   $sensorName = $sensor['name'];
+//   // if ($db->exec("ALTER TABLE $esp ADD COLUMN $sensorName INTEGER NOT NULL DEFAULT '0' ")) {
+//  if ($db->exec("ALTER TABLE $esp ADD COLUMN $sensorName TEXT ")) {
+//    echo "<h2>ALTER TABLE $esp ADD COLUMN $sensorName TEXT </h2>";
+//   }
+// }
+// echo "<h2>Database initialized</h2>";
+// exit;
 
 
 // /**

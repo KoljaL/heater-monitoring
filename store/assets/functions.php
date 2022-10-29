@@ -1,15 +1,31 @@
 <?php
+/**
+ * 
+ * 
+ * just to store some functions
+ * 
+ * 
+ */
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 date_default_timezone_set('Europe/Berlin');
 
-
+// disable debug output
 $PPRINT = true;
 
-/**---------------------------*/
-/**         FUNCTIONS         */
-/**---------------------------*/
+
+
+/**
+ * 
+ * 
+ *---------------------------*
+ *         FUNCTIONS         *
+ *---------------------------*
+ * 
+ * 
+ */
+
 
 
 /**
@@ -29,7 +45,20 @@ function getConfig() {
       return $d;
     }
   }
-  $conf = (array) json_decode(file_get_contents('../config.json'));
+  //
+  if (is_file('assets/config.json')) {
+    $conf = (array) json_decode(file_get_contents('assets/config.json'));
+  }
+  //
+  else if (is_file('config.json')) {
+    $conf = (array) json_decode(file_get_contents('config.json'));
+  }
+  //
+  else if (is_file('../config.json')) {
+    $conf = (array) json_decode(file_get_contents('../config.json'));
+  } else {
+    pprint(__DIR__);
+  }
   return objectToArray($conf);
 }
 

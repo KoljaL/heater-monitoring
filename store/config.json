@@ -3,6 +3,7 @@
     "db_file": "db.sqlite",
     "ESP": {
       "EG_1": {
+        "name": "EG_1",
         "stepped": true,
         "tension": ".5",
         "axis": {
@@ -63,6 +64,7 @@
         ]
       },
       "EG_2": {
+        "name": "EG_2",
         "stepped": true,
         "tension": ".5",
         "axis": {

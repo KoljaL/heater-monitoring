@@ -1,7 +1,12 @@
 <?php
-// $time_start = microtime(true);
-
-// echo "<pre>";
+/**
+ * 
+ * 
+ * try to interpolate timeseries with PHP
+ * not ready!
+ * 
+ * 
+ */
 
 include '../functions.php';
 $config = getConfig();
