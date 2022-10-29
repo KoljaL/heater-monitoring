@@ -12,24 +12,24 @@ This PHP script collects data about the URL and stores it in an SQLite database 
 
 copy the code in a local folder
 
-run:  
+- run:  
 `php -S localhost:9090`
 
 ### use the following links
 
-visit chart:  
+- visit chart:  
 `http://localhost:9090`
 
-create dummy data:
+- create dummy data:   
 `http://localhost:9090/store/assets/dummy.php` 
 
-insert values:  
+- insert values:  
 `localhost:9090/store/?ESP=EG_1&WZ_TR=10&WZ_HK1_VL=29&WZ_HK1_RL=40`
 
-initialize database: (will not delete existing db)  
+- initialize database: (will not delete existing db)  
 `http://localhost:9090/store/?initDB`
 
-remove database:   
+- remove database:   
 `http://localhost:9090/store/?removeDB`
 
 
