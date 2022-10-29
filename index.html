@@ -21,6 +21,11 @@
       transition: all .5s;
     }
 
+    body {
+      font-family: Verdana, Geneva, Tahoma, sans-serif;
+
+    }
+
     header {
       display: flex;
       flex-direction: row;
@@ -274,9 +279,140 @@
     } // noFF
 
 
+
+    const getOrCreateTooltip = (chart) => {
+      let tooltipEl = chart.canvas.parentNode.querySelector('div.myTooltip');
+
+      if (!tooltipEl) {
+        tooltipEl = document.createElement('div');
+        tooltipEl.style.background = 'rgba(0, 0, 0, 0.9)';
+        tooltipEl.style.borderRadius = '3px';
+        tooltipEl.style.color = 'white';
+        tooltipEl.style.opacity = 1;
+        tooltipEl.style.pointerEvents = 'none';
+        tooltipEl.style.position = 'absolute';
+        tooltipEl.style.minWidth = 'max-content';
+        // tooltipEl.style.transform = 'translate(-50%, 0)';
+        // tooltipEl.style.transition = 'all .1s ease';
+        tooltipEl.classList.add('myTooltip')
+
+        const table = document.createElement('table');
+        table.style.margin = '0px';
+        tooltipEl.appendChild(table);
+        chart.canvas.parentNode.appendChild(tooltipEl);
+      }
+
+      return tooltipEl;
+    };
+
+    const externalTooltipHandler = (context) => {
+      // Tooltip Element
+      const {chart, tooltip} = context;
+      const tooltipEl = getOrCreateTooltip(chart);
+      // console.log(tooltipEl)
+
+      // Hide if no tooltip
+      if (tooltip.opacity === 0) {
+        tooltipEl.style.opacity = 0;
+        return;
+      }
+
+      // Set Text
+      if (tooltip.body) {
+        const titleLines = tooltip.title || [];
+        const bodyLines = tooltip.body.map(b => b.lines);
+
+        const tableHead = document.createElement('thead');
+
+        titleLines.forEach(title => {
+          const tr = document.createElement('tr');
+          tr.style.borderWidth = 0;
+
+          const th = document.createElement('th');
+          th.style.borderWidth = 0;
+          th.style.fontWeight = 400;
+          th.style.float = 'left';
+          th.style.paddingLeft = '17px';
+          const text = document.createTextNode(title);
+
+          th.appendChild(text);
+          tr.appendChild(th);
+          tableHead.appendChild(tr);
+        });
+
+        const tableBody = document.createElement('tbody');
+        bodyLines.forEach((body, i) => {
+          // console.log(tooltip.dataPoints[i].dataset)
+          const colors = tooltip.labelColors[i];
+
+          const span = document.createElement('span');
+          span.style.background = colors.backgroundColor;
+          span.style.borderColor = colors.borderColor;
+          span.style.borderWidth = '2px';
+          span.style.marginRight = '10px';
+          span.style.height = '10px';
+          span.style.width = '10px';
+          span.style.display = 'inline-block';
+
+          const tr = document.createElement('tr');
+          tr.style.backgroundColor = 'inherit';
+          tr.style.borderWidth = 0;
+
+          const td_label = document.createElement('td');
+          td_label.style.borderWidth = 0;
+          const label = document.createTextNode(tooltip.dataPoints[i].dataset.label);
+          td_label.appendChild(span);
+          td_label.appendChild(label);
+          tr.appendChild(td_label);
+
+          const td_value = document.createElement('td');
+          td_value.style.borderWidth = 0;
+          let unit = tooltip.dataPoints[i].dataset.unit
+          let value = tooltip.dataPoints[i].parsed.y
+          // value = Math.round(value * 100) / 100
+          const text = document.createTextNode(value.toFixed(2) + " " + unit);
+          td_value.appendChild(text);
+          tr.appendChild(td_value);
+          tableBody.appendChild(tr);
+        });
+
+        const tableRoot = tooltipEl.querySelector('table');
+
+        // Remove old children
+        while (tableRoot.firstChild) {
+          tableRoot.firstChild.remove();
+        }
+
+        // Add new children
+        tableRoot.appendChild(tableHead);
+        tableRoot.appendChild(tableBody);
+      }
+
+      const {offsetLeft: positionX, offsetTop: positionY} = chart.canvas;
+      let chartWidth = chart.canvas.width
+      let tooltipWidth = tooltip.width
+      let trans = (tooltip.caretX / (chartWidth / 1.5)) * tooltipWidth
+
+      // console.log(trans)
+      // console.log(tooltip)
+      // console.log(tooltip.caretY)
+      // console.log(tooltip._eventPosition.y)
+      // console.log(tooltip.y)
+
+      tooltipEl.style.transform = `translate(-${trans}px, 0)`;
+      let Yposition = tooltip._eventPosition.y - (tooltip.height / 1.4) + 'px'
+      // Display, position, and set styles for font
+      tooltipEl.style.opacity = 1;
+      tooltipEl.style.left = positionX + tooltip.caretX + 'px';
+      tooltipEl.style.top = Yposition //positionY + tooltip.caretY + 'px';
+      tooltipEl.style.font = tooltip.options.bodyFont.string;
+      tooltipEl.style.padding = tooltip.options.padding + 'px ' + tooltip.options.padding + 'px';
+    };
+
+
     /**
      * 
-     * CHART CONFIG config.options.plugins.zoom.limits
+     * CHART CONFIG  
      * 
      */
     config = {
@@ -354,7 +490,8 @@
         interaction: {
           intersect: false,
           axis: 'x',
-          mode: 'nearest',
+          // mode: 'nearest',
+          mode: 'index',
         },
         transitions: {
           zoom: {
@@ -368,20 +505,22 @@
           tooltip: {
             // mode: 'interpolate',
             // intersect: true,
-            animation: true,
-            usePointStyle: true,
-            enabled: true,
-            position: 'average',
-            bodyColor: 'white',
-            callbacks: {
-              label: function (context) {
-                let unit = context.dataset.unit || '';
-                let label = context.dataset.label || '';
-                let value = context.parsed.y || '';
-                // console.log(context)
-                return label + ' ' + value + ' ' + unit;
-              }
-            }
+            // animation: true,
+            // usePointStyle: true,
+            // enabled: true,
+            enabled: false,
+            // position: 'average',
+            // bodyColor: 'white',
+            external: externalTooltipHandler,
+            // callbacks: {
+            //   label: function (context) {
+            //     let unit = context.dataset.unit || '';
+            //     let label = context.dataset.label || '';
+            //     let value = context.parsed.y || '';
+            //     console.log(context)
+            //     return label + ' <br>' + value + ' ' + unit;
+            //   }
+            // }
           },
           zoom: {
             limits: {
