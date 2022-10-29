@@ -1,29 +1,32 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
+// date_default_timezone_set('Europe/Berlin');
 
-echo "<pre>";
-include '../config.php';
-date_default_timezone_set('Europe/Berlin');
+// echo "<pre>";
+include '../functions.php';
+$config = getConfig();
 
 
 ////////// START
 
+// days before and after today
+$createDays = 5;
 // create values for every x minutes
-$minuteIntervall = 5;
+$minuteIntervall = 15;
 
 removeDB();
 // create new database
 $db = new SQLite3($config['db_file']);
 
-$esp = 'haus_one';
+$esp = 'EG_1';
 initDB();
-createDummyData(5);
+createDummyData($createDays);
 
-$esp = 'haus_two';
+$esp = 'EG_2';
 initDB();
-createDummyData(5);
+createDummyData($createDays);
 
 exit;
 ////////////////////////////////// FUNCTIONS //////////////////////////////////
@@ -95,47 +98,65 @@ function createDummyData($days) {
         $m = ($m < 10) ? "0" . $m : $m;
 
 
-        // // randomly add no value
-        // if (rand(1, 5) > 3) {
-        //   continue;
-        // }
 
-        // // no values in hours
-        // if ($h === 12 || $h === 18) {
-        //   continue;
-        // }
+        // missing values for EG_2
+        if ($esp === 'EG_2') {
+          // // randomly add no value
+          if (rand(1, 10) > 8) {
+            continue;
+          }
+
+          // // no values in hours
+          // if ($h === 12 || $h === 18) {
+          //   continue;
+          // }
+        }
 
 
 
         // date
         $datetime = "'" . $date . ' ' . $h . ":" . $m . ":00'";
 
-        // values
+        // sinus runner
         $sin = ($sin < 100) ? $sin -= 1 : $sin += 1;
-        $valuesArray = [
-          round($j * .01 + sin($sin / 100) * 10, 2),
-          round(25 + cos($sin / 100) * 20, 2),
-          round(50 + sin($sin / 2) * 20, 2),
-          round(25 + sin($sin / 5) * 10, 2),
-          round(90 - $j * .1 + cos($sin / 100) * 10, 2),
-          round(25 + sin($sin / 100) * 20, 2),
-          round(40 + sin($sin / 20) * 20, 2),
-          round(45 + sin($sin / 15) * 10, 2),
+
+        /////// RANDOM KEYS /////
+        // values
+        // $valuesArray = [
+        //   round($j * .01 + sin($sin / 100) * 10, 2),
+        //   round(25 + cos($sin / 100) * 20, 2),
+        //   round(50 + sin($sin / 2) * 20, 2),
+        //   round(25 + sin($sin / 5) * 10, 2),
+        //   round(90 - $j * .1 + cos($sin / 100) * 10, 2),
+        //   round(25 + sin($sin / 100) * 20, 2),
+        //   round(40 + sin($sin / 20) * 20, 2),
+        //   round(45 + sin($sin / 15) * 10, 2),
+        // ];
+
+        // $dataArray = [];
+        // $v = 0;
+        // foreach ($sensors as $sensor) {
+        //   $dataArray[$sensor['name']] = $valuesArray[$v];
+        //   $v = ($v >= count($valuesArray) - 1) ? 0 : $v += 1;
+        // }
+
+        $dataArray = [
+          "WZ_TR" => round(17 + sin($sin / 2) * 2, 2),
+          "WZ_HK1_VL" => round(50 + cos($sin / 2) * 2, 2),
+          "WZ_HK1_RL" => round(40 + sin($sin / 2) * 2, 2),
+          "WZ_HK2_VL" => round(45 + cos($sin / 3) * 2, 2),
+          "WZ_HK2_RL" => round(35 + sin($sin / 3) * 2, 2)
         ];
 
-        $dataArray = [];
-        $v = 0;
-        foreach ($sensors as $sensor) {
-          $dataArray[$sensor['name']] = $valuesArray[$v];
-          $v = ($v >= count($valuesArray) - 1) ? 0 : $v += 1;
-        }
 
 
+        // pprint($dataArray);
 
         // remove random key value from $array
-        $keyToUnlink = array_keys($dataArray)[rand(0, 1)];
-        // unset($dataArray[$keyToUnlink]);
-
+        if ($esp === 'EG_2') {
+          $keyToUnlink = array_keys($dataArray)[rand(0, 1)];
+          unset($dataArray[$keyToUnlink]);
+        }
 
         // make strings from array
         $columns = '(' . implode(',', array_keys($dataArray)) . ',date)';

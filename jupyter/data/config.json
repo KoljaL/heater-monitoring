@@ -2,7 +2,7 @@
     "date_default_timezone_set": "Europe/Berlin",
     "db_file": "db.sqlite",
     "ESP": {
-      "haus_one": {
+      "EG_1": {
         "stepped": true,
         "tension": ".5",
         "axis": {
@@ -13,48 +13,56 @@
             "max": "70"
           },
           "Yright": {
-            "value": "percent",
-            "unit": "%",
+            "value": "degree",
+            "unit": "°C",
             "min": "0",
-            "max": "100"
+            "max": "70"
           }
         },
         "sensors": [
           {
-            "name": "temp_1",
-            "label": "Temperatur Keller",
+            "name": "WZ_TR",
+            "label": "Wohnzimmer Raumtemperatur",
             "yAxisID": "Yleft",
-            "backgroundColor": "darkred",
-            "borderColor": "darkred",
+            "backgroundColor": "#2E8B57",
+            "borderColor": "#2E8B57",
             "unit": "°C"
           },
           {
-            "name": "temp_2",
-            "label": "Temperatur Garage",
+            "name": "WZ_HK1_VL",
+            "label": "Wohnzimmer HK links VL",
             "yAxisID": "Yleft",
-            "backgroundColor": "darkblue",
-            "borderColor": "darkblue",
+            "backgroundColor": "#AA4A44",
+            "borderColor": "#AA4A44",
             "unit": "°C"
           },
           {
-            "name": "hum_1",
-            "label": "rel. Luftfeuchte Keller",
-            "yAxisID": "Yright",
-            "backgroundColor": "darkgreen",
-            "borderColor": "darkgreen",
-            "unit": "%"
+            "name": "WZ_HK1_RL",
+            "label": "Wohnzimmer HK links RL",
+            "yAxisID": "Yleft",
+            "backgroundColor": "#1E90FF",
+            "borderColor": "#1E90FF",
+            "unit": "°C"
           },
           {
-            "name": "hum_2",
-            "label": "rel. Luftfeuchte Garage",
+            "name": "WZ_HK2_VL",
+            "label": "Wohnzimmer HK links VL",
             "yAxisID": "Yright",
-            "backgroundColor": "gold",
-            "borderColor": "gold",
-            "unit": "%"
+            "backgroundColor": "#880808",
+            "borderColor": "#880808",
+            "unit": "°C"
+          },
+          {
+            "name": "WZ_HK2_RL",
+            "label": "Wohnzimmer HK links RL",
+            "yAxisID": "Yright",
+            "backgroundColor": "#0000CD",
+            "borderColor": "#0000CD",
+            "unit": "°C"
           }
         ]
       },
-      "haus_two": {
+      "EG_2": {
         "stepped": true,
         "tension": ".5",
         "axis": {
@@ -65,44 +73,52 @@
             "max": "70"
           },
           "Yright": {
-            "value": "percent",
-            "unit": "%",
+            "value": "degree",
+            "unit": "°C",
             "min": "0",
-            "max": "100"
+            "max": "70"
           }
         },
         "sensors": [
           {
-            "name": "temp_1",
-            "label": "Temperatur Wohnzimmer",
+            "name": "WZ_TR",
+            "label": "Wohnzimmer Raumtemperatur",
             "yAxisID": "Yleft",
-            "backgroundColor": "red",
-            "borderColor": "red",
+            "backgroundColor": "#2E8B57",
+            "borderColor": "#2E8B57",
             "unit": "°C"
           },
           {
-            "name": "temp_2",
-            "label": "Temperatur Küche",
+            "name": "WZ_HK1_VL",
+            "label": "Wohnzimmer HK links VL",
             "yAxisID": "Yleft",
-            "backgroundColor": "blue",
-            "borderColor": "blue",
+            "backgroundColor": "#AA4A44",
+            "borderColor": "#AA4A44",
             "unit": "°C"
           },
           {
-            "name": "hum_1",
-            "label": "rel. Luftfeuchte Wohnzimmer",
-            "yAxisID": "Yright",
-            "backgroundColor": "green",
-            "borderColor": "green",
-            "unit": "%"
+            "name": "WZ_HK1_RL",
+            "label": "Wohnzimmer HK links RL",
+            "yAxisID": "Yleft",
+            "backgroundColor": "#1E90FF",
+            "borderColor": "#1E90FF",
+            "unit": "°C"
           },
           {
-            "name": "hum_2",
-            "label": "rel. Luftfeuchte Küche",
+            "name": "WZ_HK2_VL",
+            "label": "Wohnzimmer HK links VL",
             "yAxisID": "Yright",
-            "backgroundColor": "orange",
-            "borderColor": "orange",
-            "unit": "%"
+            "backgroundColor": "#880808",
+            "borderColor": "#880808",
+            "unit": "°C"
+          },
+          {
+            "name": "WZ_HK2_RL",
+            "label": "Wohnzimmer HK links RL",
+            "yAxisID": "Yright",
+            "backgroundColor": "#0000CD",
+            "borderColor": "#0000CD",
+            "unit": "°C"
           }
         ]
       }

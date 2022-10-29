@@ -1,12 +1,13 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-echo "<pre>";
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
+// echo "<pre>";
 // localhost:9090/store.php?ESP=haus_one&temp_1=10&temp_2=29&hum_1=40
-include '../config.php';
-date_default_timezone_set('Europe/Berlin');
+// date_default_timezone_set('Europe/Berlin');
 
+include '../functions.php';
+$config = getConfig();
 
 
 // print_r($_GET);
@@ -51,7 +52,7 @@ if (isset($config['ESP'][$esp]['sensors'])) {
  * 
  */
 // $db = new SQLite3($config['db_file']);
-$db = new PDO('sqlite:'.$config['db_file']);
+$db = new PDO('sqlite:' . $config['db_file']);
 
 
 /**
@@ -80,7 +81,7 @@ if (isset($_GET['initDB'])) {
   foreach ($sensors as $sensor) {
     $sensorName = $sensor['name'];
     // if ($db->exec("ALTER TABLE $esp ADD COLUMN $sensorName INTEGER NOT NULL DEFAULT '0' ")) {
-    if($db->exec("ALTER TABLE $esp ADD COLUMN $sensorName TEXT ")) {
+    if ($db->exec("ALTER TABLE $esp ADD COLUMN $sensorName TEXT ")) {
       echo "<h2>ALTER TABLE $esp ADD COLUMN $sensorName TEXT </h2>";
     }
   }

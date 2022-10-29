@@ -1,12 +1,11 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
 // localhost:9090/store.php?ESP=haus_one&temp_1=10&temp_2=29&hum_1=40
 // $time_start = microtime(true);
-
-
-include '../config.php';
+include '../functions.php';
+$config = getConfig();
 
 $sensors = array();
 $startDate = '';
@@ -20,13 +19,11 @@ if (isset($_GET['config'])) {
   exit;
 }
 
+
 // connect to database
+//
 $db = new SQLite3($config['db_file']);
 
-// set date format
-date_default_timezone_set('Europe/Berlin');
-// $now = new DateTimeImmutable();
-// $now->format('Y-m-d H:i:s');
 
 
 // check if ESP name is set in URL

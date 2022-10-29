@@ -3,7 +3,8 @@
 
 // echo "<pre>";
 
-require_once('../config.php');
+include '../functions.php';
+$config = getConfig();
 
 /**
  * 
