@@ -39,9 +39,8 @@ session_start();
 // $_SESSION['loggedin'] = false;
 
 if (isset($_GET['login'])) {
-  // if ($_SESSION['loggedin'] === false) {
-  login();
-
+    // if ($_SESSION['loggedin'] === false) {
+    login();
 }
 // else {
 //   $response = [
@@ -58,60 +57,59 @@ if (isset($_GET['login'])) {
 // }
 
 if (isset($_GET['getTables'])) {
-  $response = [
-    'API' => true, 'status' => 200,
-    'data' => [
-      'tables' => getTablesAsLinks($_GET['getTables']),
-    ],
-    'message' => '',
-    'session' => [
-      'id' => session_id(),
-      'SESSION' => $_SESSION,
-    ]
-  ];
+    $response = [
+      'API' => true, 'status' => 200,
+      'data' => [
+        'tables' => getTablesAsLinks($_GET['getTables']),
+      ],
+      'message' => '',
+      'session' => [
+        'id' => session_id(),
+        'SESSION' => $_SESSION,
+      ]
+    ];
 }
 
 
 if (isset($_GET['getRows']) && isset($_GET['database'])) {
-  $table = $_GET['getRows'];
-  $database = $_GET['database'];
+    $table = $_GET['getRows'];
+    $database = $_GET['database'];
 
-  $response = [
-    'API' => true, 'status' => 200,
-    'data' => [
-      'rows' => getRows($table, $database),
-    ],
-    'message' => '',
-    'session' => [
-      'id' => session_id(),
-      'SESSION' => $_SESSION,
-    ]
-  ];
+    $response = [
+      'API' => true, 'status' => 200,
+      'data' => [
+        'rows' => getRows($table, $database),
+      ],
+      'message' => '',
+      'session' => [
+        'id' => session_id(),
+        'SESSION' => $_SESSION,
+      ]
+    ];
 }
 
 if (isset($_GET['updateValue'])) {
-
-  if (updateValue()) {
-    $response = [
-      'API' => true,
-      'status' => 200,
-      'message' => $request,
-      'session' => [
-        'id' => session_id(),
-        'SESSION' => $_SESSION,
-      ]
-    ];
-  } else {
-    $response = [
-      'API' => true,
-      'status' => 400,
-      // 'message' => '', will be set inside the function
-      'session' => [
-        'id' => session_id(),
-        'SESSION' => $_SESSION,
-      ]
-    ];
-  }
+    if (updateValue()) {
+        $response = [
+          'API' => true,
+          'status' => 200,
+          'message' => $request,
+          'session' => [
+            'id' => session_id(),
+            'SESSION' => $_SESSION,
+          ]
+        ];
+    } else {
+        $response = [
+          'API' => true,
+          'status' => 400,
+          // 'message' => '', will be set inside the function
+          'session' => [
+            'id' => session_id(),
+            'SESSION' => $_SESSION,
+          ]
+        ];
+    }
 }
 
 
@@ -125,8 +123,8 @@ if (isset($_GET['updateValue'])) {
 // pprint('END');
 // exit;
 if ($response['API'] === true) {
-  echo json_encode($response);
-  exit;
+    echo json_encode($response);
+    exit;
 }
 
 
@@ -142,72 +140,73 @@ if ($response['API'] === true) {
 
 
 
-function updateValue() {
-  global $request, $dbFolder, $response;
-  // pprint($request);
-  $database = $request['database'];
-  $table = $request['table'];
-  $id = $request['id'];
-  $row = $request['row'];
-  $value = $request['value'];
+function updateValue()
+{
+    global $request, $dbFolder, $response;
+    // pprint($request);
+    $database = $request['database'];
+    $table = $request['table'];
+    $id = $request['id'];
+    $row = $request['row'];
+    $value = $request['value'];
 
-  $db = new SQLite3($dbFolder . "/" . $database);
-  $stmt = $db->prepare("UPDATE $table SET $row='$value' WHERE id=$id  ");
-  $result = $stmt->execute();
-  if ($result) {
-    return true;
-  } else {
-    $response = [
-      'API' => true,
-      'status' => 400,
-      'message' => 'error',
-      'session' => [
-        'id' => session_id(),
-        'SESSION' => $_SESSION,
-      ]
-    ];
-  }
+    $db = new SQLite3($dbFolder . "/" . $database);
+    $stmt = $db->prepare("UPDATE $table SET $row='$value' WHERE id=$id  ");
+    $result = $stmt->execute();
+    if ($result) {
+        return true;
+    } else {
+        $response = [
+          'API' => true,
+          'status' => 400,
+          'message' => 'error',
+          'session' => [
+            'id' => session_id(),
+            'SESSION' => $_SESSION,
+          ]
+        ];
+    }
 }
 
 /**
- * 
+ *
  * LOGIN
- * 
+ *
  */
-function login() {
-  global $request, $response, $password;
+function login()
+{
+    global $request, $response, $password;
 
-  if (isset($_GET['login'])) {
-    $passwordCheck = $request['password'];
-    if ($password !== $passwordCheck) {
-      $response = [
-        'API' => true,
-        'status' => 400,
-        'message' => 'Password wrong',
-      ];
-    } else {
-      $_SESSION['loggedin'] = true;
-      $response = [
-        'API' => true,
-        'status' => 200,
-        'data' => [
-          'databases' => getDatabases(),
-        ],
-        'message' => 'login return',
-        'session' => [
-          'id' => session_id(),
-          'SESSION' => $_SESSION,
-        ]
-      ];
-    }
-    return $response;
-    // echo json_encode($response);
-    // exit;
-
-  } // login
-  // else {
-  //   // session_start();
-  //   if (!$_SESSION['loggedin']) {
+    if (isset($_GET['login'])) {
+        $passwordCheck = $request['password'];
+        if ($password !== $passwordCheck) {
+            $response = [
+              'API' => true,
+              'status' => 400,
+              'message' => 'Password wrong',
+            ];
+        } else {
+            $_SESSION['loggedin'] = true;
+            $response = [
+              'API' => true,
+              'status' => 200,
+              'data' => [
+                'databases' => getDatabases(),
+              ],
+              'message' => 'login return',
+              'session' => [
+                'id' => session_id(),
+                'SESSION' => $_SESSION,
+              ]
+            ];
+        }
+        return $response;
+        // echo json_encode($response);
+        // exit;
+    } // login
+    // else {
+    //   // session_start();
+    //   if (!$_SESSION['loggedin']) {
   //     $response = [
   //       'API' => true,
   //       'status' => 200,
@@ -218,8 +217,8 @@ function login() {
   //     // // pprint($_SESSION);
   //     // echo json_encode($response);
   //     // exit;
-  //   }
-  // }
+    //   }
+    // }
 }
 
 
@@ -227,53 +226,56 @@ function login() {
 
 
 /**
- * 
+ *
  * TABLE CONTENT
  *
  */
-function getRows($table, $database) {
-  global $dbFolder;
-  $db = new SQLite3($dbFolder . "/" . $database);
-  $stmt = $db->prepare("SELECT * FROM $table");
-  $results = $stmt->execute();
-  $array = array();
-  while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
-    $array[] = $row;
-  }
-  return $array;
+function getRows($table, $database)
+{
+    global $dbFolder;
+    $db = new SQLite3($dbFolder . "/" . $database);
+    $stmt = $db->prepare("SELECT * FROM $table");
+    $results = $stmt->execute();
+    $array = array();
+    while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
+        $array[] = $row;
+    }
+    return $array;
 }
 
 
-function getTablesAsLinks($database) {
-  global $db, $dbFolder;
-  $db = new SQLite3($dbFolder . "/" . $database);
-  $stmt = $db->prepare("SELECT * FROM sqlite_master WHERE type='table';");
-  $results = $stmt->execute();
-  $array = array();
-  while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
-    $array[] = [
-      'name' => $row['name'],
-      'database' => $database
-    ];
-  }
-  return $array;
+function getTablesAsLinks($database)
+{
+    global $db, $dbFolder;
+    $db = new SQLite3($dbFolder . "/" . $database);
+    $stmt = $db->prepare("SELECT * FROM sqlite_master WHERE type='table';");
+    $results = $stmt->execute();
+    $array = array();
+    while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
+        $array[] = [
+          'name' => $row['name'],
+          'database' => $database
+        ];
+    }
+    return $array;
 }
 
 
 
-function getDatabases() {
-  global $dbFolder, $dbExtension;
-  $files = glob($dbFolder . "/*." . $dbExtension);
-  $array = array();
-  foreach ($files as $file) {
-    $file = str_replace($dbFolder . '/', '', $file);
-    $name = str_replace('.' . $dbExtension, '', $file);
-    $array[] = [
-      'name' => $name,
-      'file' => $file
-    ];
-  }
-  return $array;
+function getDatabases()
+{
+    global $dbFolder, $dbExtension;
+    $files = glob($dbFolder . "/*." . $dbExtension);
+    $array = array();
+    foreach ($files as $file) {
+        $file = str_replace($dbFolder . '/', '', $file);
+        $name = str_replace('.' . $dbExtension, '', $file);
+        $array[] = [
+          'name' => $name,
+          'file' => $file
+        ];
+    }
+    return $array;
 }
 
 
@@ -369,6 +371,20 @@ function getDatabases() {
   header .menuIcon {
     width: 24px;
     height: 24px;
+  }
+
+  header .breadcrumb {
+    min-width: 300px;
+  }
+
+  header .showDatabase {
+    color: var(--blue);
+  }
+
+  header .showTable {
+    color: var(--green);
+    padding-left: 1rem;
+
   }
 
   footer {
@@ -479,6 +495,15 @@ function getDatabases() {
     display: none;
   }
 
+  .dbList a {
+    color: var(--blue);
+  }
+
+
+  .tableList a {
+    color: var(--green);
+  }
+
 
   /*   TABLE */
   .dataTable {
@@ -573,7 +598,7 @@ function getDatabases() {
 
 <body>
   <header>
-    <div>
+    <h2>
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="2.757 3.149 493.825 493.719" width="30" height="30">
         <path id="Level_1" style="opacity: 1; fill: rgb(190, 80, 70); stroke: rgb(0, 0, 0); stroke-width: 7;"
           d="M 203.003 110.256 C 145.17 107.605 95.455 100.789 60.235 91.47 C 42.605 86.805 28.505 81.479 18.856 75.741 C 9.143 69.964 3.615 63.399 3.615 56.755 C 3.615 51.715 7.11 46.533 13.535 41.794 C 19.9 37.1 29.396 32.514 41.723 28.199 C 114.43 2.789 271.337 -4.567 386.077 12.056 C 436.533 19.377 472.298 30.362 488.01 43.336 C 492.523 47.099 495.34 51.01 496.171 54.809 C 497.012 58.649 495.823 62.655 492.881 66.362 C 475.961 87.168 408.406 103.256 311.353 109.525 C 293.557 110.675 222.579 111.151 203.003 110.256 Z">
@@ -588,8 +613,13 @@ function getDatabases() {
           d="M 203.922 496.723 C 201.357 496.564 192.542 496.042 184.332 495.563 C 92.232 490.178 21.351 472.701 6.318 451.733 L 3.305 447.49 L 3.038 394.722 L 2.757 339.492 L 7.218 344.833 C 25.137 366.457 92.014 382.044 192.379 388.064 C 217.81 389.593 288.155 389.343 314.487 387.632 C 369.165 384.082 414.493 377.384 447.244 368.013 C 459.475 364.517 477.921 356.818 484.243 352.568 C 486.737 350.897 490.107 348.007 491.745 346.126 L 496.573 340.615 L 496.55 394.75 C 496.539 424.302 496.693 438.057 495.625 445.405 C 494.506 453.109 491.803 454.248 487.088 458.08 C 468.308 473.158 418.033 486.096 352.444 492.702 C 319.933 495.973 305.858 496.578 257.174 496.797 C 230.485 496.915 206.517 496.882 203.922 496.723 Z">
         </path>
       </svg>
+      DB Editor
+    </h2>
+    <div class=breadcrumb>
+      <span class="showDatabase"></span>
+      <span class="showTable">
+      </span>
     </div>
-    <div>DB Editor</div>
     <div class=menuIcon>
       <label id="toggleSidebar" for="sidebarCKB">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="white">
@@ -606,7 +636,7 @@ function getDatabases() {
         <div></div>
       </div>
       <div class="tableList">
-        <h3>Tabels</h3>
+        <h3>Tables</h3>
         <div></div>
       </div>
     </nav>
@@ -700,7 +730,7 @@ function getDatabases() {
       id: event.target.dataset.id,
       value: event.target.textContent,
     }
-    console.log(data)
+    // console.log(data)
 
 
     fetch('admin.php?updateValue', {
@@ -728,7 +758,7 @@ function getDatabases() {
         }
         // read error message
         else {
-          console.error(data.mess)
+          console.error(data.message)
           event.target.classList.remove('waiting')
           event.target.classList.add('error')
         }
@@ -774,6 +804,7 @@ function getDatabases() {
         })
         .then(response => response.json())
         .then(data => {
+          document.querySelector('.showTable').innerHTML = `${table}`
           DBobject.table = table
           DBobject.session.id = data.session.id
           DBobject.data.rows = data.data.rows
@@ -813,9 +844,12 @@ function getDatabases() {
         })
         .then(response => response.json())
         .then(data => {
+          document.querySelector('.showDatabase').innerHTML = file.split('.')[0]
+          document.querySelector('.showTable').innerHTML = ''
           DBobject.database = file
           DBobject.session.id = data.session.id
           DBobject.data.tables = data.data.tables
+          DBobject.data.rows = ''
           refresh();
         })
         .catch((error) => {
