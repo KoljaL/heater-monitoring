@@ -91,16 +91,27 @@ if (isset($_GET['getRows']) && isset($_GET['database'])) {
 
 if (isset($_GET['updateValue'])) {
 
-  updateValue();
-  $response = [
-    'API' => true,
-    'status' => 200,
-    'message' => $request,
-    'session' => [
-      'id' => session_id(),
-      'SESSION' => $_SESSION,
-    ]
-  ];
+  if (updateValue()) {
+    $response = [
+      'API' => true,
+      'status' => 200,
+      'message' => $request,
+      'session' => [
+        'id' => session_id(),
+        'SESSION' => $_SESSION,
+      ]
+    ];
+  } else {
+    $response = [
+      'API' => true,
+      'status' => 400,
+      // 'message' => '', will be set inside the function
+      'session' => [
+        'id' => session_id(),
+        'SESSION' => $_SESSION,
+      ]
+    ];
+  }
 }
 
 
@@ -132,21 +143,29 @@ if ($response['API'] === true) {
 
 
 function updateValue() {
-  global $request, $dbFolder;
-  pprint($request);
+  global $request, $dbFolder, $response;
+  // pprint($request);
   $database = $request['database'];
   $table = $request['table'];
   $id = $request['id'];
   $row = $request['row'];
   $value = $request['value'];
 
-
-
   $db = new SQLite3($dbFolder . "/" . $database);
-  $stmt = $db->prepare("UPDATE $table SET $row=$value WHERE id=$id  ");
+  $stmt = $db->prepare("UPDATE $table SET $row='$value' WHERE id=$id  ");
   $result = $stmt->execute();
   if ($result) {
-    echo 'Updated rows: ', $db->changes();
+    return true;
+  } else {
+    $response = [
+      'API' => true,
+      'status' => 400,
+      'message' => 'error',
+      'session' => [
+        'id' => session_id(),
+        'SESSION' => $_SESSION,
+      ]
+    ];
   }
 }
 
@@ -703,12 +722,20 @@ function getDatabases() {
       .then(response => response.json())
       .then(data => {
         console.log(data)
-        event.target.classList.add('success')
-        event.target.classList.remove('waiting')
+        if (data.status === 200) {
+          event.target.classList.remove('waiting')
+          event.target.classList.add('success')
+        }
+        // read error message
+        else {
+          console.error(data.mess)
+          event.target.classList.remove('waiting')
+          event.target.classList.add('error')
+        }
       })
       .catch((error) => {
-        event.target.classList.add('error')
         event.target.classList.remove('waiting')
+        event.target.classList.add('error')
         console.error('Error:', error);
       });
 
