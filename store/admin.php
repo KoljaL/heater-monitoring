@@ -200,43 +200,13 @@ function login() {
  */
 function getRows($table, $database) {
   global $dbFolder;
-
   $db = new SQLite3($dbFolder . "/" . $database);
-
   $stmt = $db->prepare("SELECT * FROM $table");
   $results = $stmt->execute();
-
-  $firstRow = true;
-  $HTML = '<table class="dataTable">';
   $array = array();
   while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
-
     $array[] = $row;
-    // // TABLE HEADER
-    // //
-    // if ($firstRow) {
-    //   $HTML .= '<thead><tr>';
-    //   foreach ($row as $key => $value) {
-    //     $HTML .= '<th class="' . $key . '">' . $key . '</th>';
-    //   }
-    //   $HTML .= '</tr></thead><tbody>';
-    //   $firstRow = false;
-    // }
-
-    // // TABLE BODY ROWS
-    // //
-    // $HTML .= '<tr>';
-
-    // // TABLE CELLS
-    // //
-    // foreach ($row as $key => $value) {
-    //   $id = $row[array_keys($row)[0]];
-    //   $name = $table . '_' . $id . '_' . $key;
-    //   $HTML .= '<td><input class="edit ' . $key . '" type="text" name="' . $name . '" value="' . $value . '" /></td>';
-    // }
-    // $HTML .= '</tr>';
   }
-  // $HTML .= '</tbody></table>';
   return $array;
 }
 
@@ -246,19 +216,13 @@ function getTablesAsLinks($database) {
   $db = new SQLite3($dbFolder . "/" . $database);
   $stmt = $db->prepare("SELECT * FROM sqlite_master WHERE type='table';");
   $results = $stmt->execute();
-  $links = '<ul>';
   $array = array();
-
   while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
     $array[] = [
       'name' => $row['name'],
       'database' => $database
     ];
-    // $links .= "<li><a class='getRows' data-file='" . $row['name'] . "&database=" . $database . "' href='#'>" . $row['name'] . "</a></li>";
   }
-  // $links .= '</ul>';
-  // pprint($database);
-  // pprint($links);
   return $array;
 }
 
@@ -409,7 +373,7 @@ function getDatabases() {
     display: none;
   }
 
-  @media only screen and (max-width: 800px) {
+  @med ia only screen and (max-width: 800px) {
     #toggleSidebar {
       display: block;
     }
@@ -478,7 +442,7 @@ function getDatabases() {
   }
 
 
-  /* TABLE */
+  /*   TABLE */
   .dataTable {
     border-collapse: collapse;
     width: 100%;
@@ -652,7 +616,7 @@ function getDatabases() {
   article.addEventListener('dblclick', makeEditable)
 
 
-  // VARIABLES
+  //   VARIABLES
   var DBobject = {
     session: {
       id: 0,
@@ -804,7 +768,7 @@ function getDatabases() {
 
 
     // databases list
-    //
+    //  
     if (DBobject.data.databases !== '') {
       let DB = '';
       DBobject.data.databases.forEach(el => {
@@ -829,7 +793,7 @@ function getDatabases() {
     }
 
     // rows
-    //
+    // 
     if (DBobject.data.rows !== '') {
       document.querySelector('article').innerHTML = ''
       makeTable(DBobject.data.rows)
