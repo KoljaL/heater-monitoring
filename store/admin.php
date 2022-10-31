@@ -89,6 +89,21 @@ if (isset($_GET['getRows']) && isset($_GET['database'])) {
   ];
 }
 
+if (isset($_GET['updateValue'])) {
+
+  updateValue();
+  $response = [
+    'API' => true,
+    'status' => 200,
+    'message' => $request,
+    'session' => [
+      'id' => session_id(),
+      'SESSION' => $_SESSION,
+    ]
+  ];
+}
+
+
 
 //
 // OUTPUT
@@ -109,24 +124,6 @@ if ($response['API'] === true) {
 
 
 
-/**
- * 
- * getTabels
- * 
- */
-
-
-
-
-
-
-
-/**
- * 
- * getRows
- * 
- */
-
 
 /////////////////////////////////    PHP    FUNCTIONS    ///////////////////////////
 /////////////////////////////////    PHP    FUNCTIONS    ///////////////////////////
@@ -134,7 +131,24 @@ if ($response['API'] === true) {
 
 
 
+function updateValue() {
+  global $request, $dbFolder;
+  pprint($request);
+  $database = $request['database'];
+  $table = $request['table'];
+  $id = $request['id'];
+  $row = $request['row'];
+  $value = $request['value'];
 
+
+
+  $db = new SQLite3($dbFolder . "/" . $database);
+  $stmt = $db->prepare("UPDATE $table SET $row=$value WHERE id=$id  ");
+  $result = $stmt->execute();
+  if ($result) {
+    echo 'Updated rows: ', $db->changes();
+  }
+}
 
 /**
  * 
@@ -283,8 +297,13 @@ function getDatabases() {
     --bg-header: #212121;
     --bg-footer: #212121;
     --bg-sidebar: rgb(52, 52, 52);
+    --blue: rgb(82, 139, 255);
+    --yellow: rgb(209, 154, 102);
+    --green: rgb(152, 195, 121);
+    --red: rgb(190, 80, 70);
     --text-color: rgb(205, 205, 205);
-    --link-color: rgb(140, 180, 255);
+    --link-color: var(--blue);
+    /* --link-color: rgb(140, 180, 255); */
     --link-hover-color: rgb(94, 158, 255);
     --border-color: #858585;
   }
@@ -373,7 +392,7 @@ function getDatabases() {
     display: none;
   }
 
-  @med ia only screen and (max-width: 800px) {
+  @media only screen and (max-width: 800px) {
     #toggleSidebar {
       display: block;
     }
@@ -388,7 +407,6 @@ function getDatabases() {
       width: var(--sidebar-width);
       transform: translateX(0);
       position: absolute;
-      /* height: calc(100% - var(--header-height) - var(--footer-height)); */
       height: calc(var(--main-height) - 1px);
       transition: transform 1s;
     }
@@ -400,9 +418,10 @@ function getDatabases() {
   }
 
   a:hover {
-    text-decoration: none;
-    color: var(--link-hover-color);
+    /* color: var(--link-hover-color); */
+    filter: brightness(1.25);
   }
+
 
   nav ul {
     padding-left: 0;
@@ -482,31 +501,31 @@ function getDatabases() {
     padding: .5rem;
     min-width: 200px;
     white-space: nowrap;
-    /* border-right: 1px solid green; */
   }
 
   .dataTable td {
-    /* border-right: 1px solid green; */
     padding-inline: .5rem;
     min-width: 200px;
     white-space: nowrap;
+    outline: 2px solid transparent;
+    border-radius: .5rem;
   }
 
-
-  .dataTable .edit {
-    border: 1px solid transparent;
-    cursor: pointer;
+  td[contenteditable]:focus {
+    outline: 2px solid var(--yellow);
   }
 
-  .dataTable .edit:focus {
-    outline: none;
+  td[contenteditable].waiting {
+    outline: 2px solid var(--blue);
   }
 
-  .dataTable .editable:focus {
-    border: 1px solid green;
-    cursor: auto;
+  td[contenteditable].success {
+    outline: 2px solid var(--green);
   }
 
+  td[contenteditable].error {
+    outline: 2px solid var(--red);
+  }
 
   .dataTable th.id,
   .dataTable td.id {
@@ -622,6 +641,8 @@ function getDatabases() {
       id: 0,
       SESSION: '',
     },
+    database: '',
+    table: '',
     data: {
       databases: '',
       tables: '',
@@ -642,8 +663,60 @@ function getDatabases() {
    */
   function makeEditable(event) {
     event.preventDefault()
+    event.target.setAttribute("contenteditable", true);
+    event.target.focus()
+    event.target.addEventListener('focusout', updateValue)
     // console.log(event.target)
-    event.target.classList.add('editable')
+  }
+
+
+
+  function updateValue(event) {
+    event.target.classList.add('waiting')
+
+    var data = {
+      database: event.target.dataset.database,
+      table: event.target.dataset.table,
+      row: event.target.dataset.attr,
+      id: event.target.dataset.id,
+      value: event.target.textContent,
+    }
+    console.log(data)
+
+
+    fetch('admin.php?updateValue', {
+        method: 'POST',
+        mode: "same-origin",
+        credentials: "same-origin",
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          database: event.target.dataset.database,
+          table: event.target.dataset.table,
+          row: event.target.dataset.attr,
+          id: event.target.dataset.id,
+          value: event.target.textContent,
+        }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log(data)
+        event.target.classList.add('success')
+        event.target.classList.remove('waiting')
+      })
+      .catch((error) => {
+        event.target.classList.add('error')
+        event.target.classList.remove('waiting')
+        console.error('Error:', error);
+      });
+
+
+
+    setTimeout(() => {
+      event.target.classList.remove('success')
+    }, 1000);
   }
 
 
@@ -674,6 +747,7 @@ function getDatabases() {
         })
         .then(response => response.json())
         .then(data => {
+          DBobject.table = table
           DBobject.session.id = data.session.id
           DBobject.data.rows = data.data.rows
           refresh();
@@ -712,6 +786,7 @@ function getDatabases() {
         })
         .then(response => response.json())
         .then(data => {
+          DBobject.database = file
           DBobject.session.id = data.session.id
           DBobject.data.tables = data.data.tables
           refresh();
@@ -848,8 +923,14 @@ function getDatabases() {
     function createRow(obj) {
       const row = document.createElement("tr");
       const objKeys = Object.keys(obj);
+      const id = obj['id']
       objKeys.map((key) => {
         const cell = document.createElement("td");
+
+        cell.setAttribute("data-database", DBobject.database);
+        cell.setAttribute("data-table", DBobject.table);
+        cell.setAttribute("data-id", id);
+
         cell.setAttribute("data-attr", key);
         cell.classList.add(key);
         cell.innerHTML = obj[key];
