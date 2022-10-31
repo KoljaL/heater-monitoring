@@ -16,12 +16,7 @@ $request = json_decode(trim(file_get_contents("php://input")), true);
 
 $response = [
   'API' => false,
-  'status' => 0,
   'message' => '',
-  'sid' => [
-    'id' => '',
-    'SESSION' => isset($_SESSION) ?? '',
-  ],
   'data' => [
     'database' => '',
     'table' => '',
@@ -30,86 +25,56 @@ $response = [
     'value' => '',
   ]
 ];
+// pprint($_GET);
+// pprint($password);
 
+// pprint($request['password']);
 
-ini_set('session.gc_maxlifetime', 3600);
-session_start();
-
-// $_SESSION['loggedin'] = true;
-// $_SESSION['loggedin'] = false;
+// if (!empty($_GET) && $password !== isset($request['password'])  || !isset($_GET['login'])) {
+if (!isset($request['password'])) {
+    if (!empty($_GET)) {
+        $response = [
+          'request' => $request,
+          'message' => 'no password',
+        ];
+        echo json_encode($response);
+        exit;
+    }
+}
 
 if (isset($_GET['login'])) {
-    // if ($_SESSION['loggedin'] === false) {
-    login();
+    $response = [
+      'API' => true,
+      'data' => [
+        'databases' => login(),
+      ],
+    ];
 }
-// else {
-//   $response = [
-//     'status' => 200,
-//     'data' => [
-//       'databases' => getDatabases(),
-//     ],
-//     'message' => '',
-//     'session' => [
-//       'id' => session_id(),
-//       'SESSION' => $_SESSION,
-//     ]
-//   ];
-// }
 
 if (isset($_GET['getTables'])) {
     $response = [
-      'API' => true, 'status' => 200,
+      'API' => true,
       'data' => [
-        'tables' => getTablesAsLinks($_GET['getTables']),
+        'tables' => getTables(),
       ],
-      'message' => '',
-      'session' => [
-        'id' => session_id(),
-        'SESSION' => $_SESSION,
-      ]
     ];
 }
 
 
-if (isset($_GET['getRows']) && isset($_GET['database'])) {
-    $table = $_GET['getRows'];
-    $database = $_GET['database'];
-
+if (isset($_GET['getRows'])) {
     $response = [
-      'API' => true, 'status' => 200,
+      'API' => true,
       'data' => [
-        'rows' => getRows($table, $database),
+        'rows' => getRows(),
       ],
-      'message' => '',
-      'session' => [
-        'id' => session_id(),
-        'SESSION' => $_SESSION,
-      ]
     ];
 }
 
 if (isset($_GET['updateValue'])) {
-    if (updateValue()) {
-        $response = [
-          'API' => true,
-          'status' => 200,
-          'message' => $request,
-          'session' => [
-            'id' => session_id(),
-            'SESSION' => $_SESSION,
-          ]
-        ];
-    } else {
-        $response = [
-          'API' => true,
-          'status' => 400,
-          // 'message' => '', will be set inside the function
-          'session' => [
-            'id' => session_id(),
-            'SESSION' => $_SESSION,
-          ]
-        ];
-    }
+    $response = [
+      'API' => true,
+      'message' => updateValue(),
+    ];
 }
 
 
@@ -118,11 +83,10 @@ if (isset($_GET['updateValue'])) {
 // OUTPUT
 //
 
-// pprint($_SESSION, 'SESSION');
 // pprint($response, 'response');
-// pprint('END');
 // exit;
 if ($response['API'] === true) {
+    unset($response['API']);
     echo json_encode($response);
     exit;
 }
@@ -156,15 +120,7 @@ function updateValue()
     if ($result) {
         return true;
     } else {
-        $response = [
-          'API' => true,
-          'status' => 400,
-          'message' => 'error',
-          'session' => [
-            'id' => session_id(),
-            'SESSION' => $_SESSION,
-          ]
-        ];
+        return 'database error';
     }
 }
 
@@ -175,50 +131,14 @@ function updateValue()
  */
 function login()
 {
-    global $request, $response, $password;
-
+    global $request, $password;
     if (isset($_GET['login'])) {
-        $passwordCheck = $request['password'];
-        if ($password !== $passwordCheck) {
-            $response = [
-              'API' => true,
-              'status' => 400,
-              'message' => 'Password wrong',
-            ];
+        if ($password !== $request['password']) {
+            return false;
         } else {
-            $_SESSION['loggedin'] = true;
-            $response = [
-              'API' => true,
-              'status' => 200,
-              'data' => [
-                'databases' => getDatabases(),
-              ],
-              'message' => 'login return',
-              'session' => [
-                'id' => session_id(),
-                'SESSION' => $_SESSION,
-              ]
-            ];
+            return getDatabases();
         }
-        return $response;
-        // echo json_encode($response);
-        // exit;
-    } // login
-    // else {
-    //   // session_start();
-    //   if (!$_SESSION['loggedin']) {
-  //     $response = [
-  //       'API' => true,
-  //       'status' => 200,
-  //       'message' => 'not logged in',
-  //     ];
-  //     return $response;
-
-  //     // // pprint($_SESSION);
-  //     // echo json_encode($response);
-  //     // exit;
-    //   }
-    // }
+    }
 }
 
 
@@ -230,9 +150,13 @@ function login()
  * TABLE CONTENT
  *
  */
-function getRows($table, $database)
+function getRows()
 {
-    global $dbFolder;
+    global $request, $dbFolder, $response;
+    // pprint($request);
+    $database = $request['database'];
+    $table = $request['table'];
+
     $db = new SQLite3($dbFolder . "/" . $database);
     $stmt = $db->prepare("SELECT * FROM $table");
     $results = $stmt->execute();
@@ -244,10 +168,13 @@ function getRows($table, $database)
 }
 
 
-function getTablesAsLinks($database)
+function getTables()
 {
-    global $db, $dbFolder;
+    global $request, $dbFolder;
+    // pprint($request);
+    $database = $request['database'];
     $db = new SQLite3($dbFolder . "/" . $database);
+
     $stmt = $db->prepare("SELECT * FROM sqlite_master WHERE type='table';");
     $results = $stmt->execute();
     $array = array();
@@ -375,6 +302,8 @@ function getDatabases()
 
   header .breadcrumb {
     min-width: 300px;
+    align-self: end;
+    margin-bottom: 3px;
   }
 
   header .showDatabase {
@@ -485,9 +414,20 @@ function getDatabases()
     width: 150px;
   }
 
-  form.login input {
-    margin-top: 1rem;
+  form.login input:not([type="checkbox"]) {
+    display: block;
+    margin-top: .5rem;
     width: 100px;
+  }
+
+  form.login label {
+    display: block;
+    margin-top: .5rem;
+    margin-bottom: .5rem;
+  }
+
+  form #wrongPW {
+    color: var(--red);
   }
 
   .dbList,
@@ -621,6 +561,7 @@ function getDatabases()
       </span>
     </div>
     <div class=menuIcon>
+      <label id=logOut>logOut</label>
       <label id="toggleSidebar" for="sidebarCKB">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="white">
           <path d="M 24 6 H 0 V 2 H 24 V 6 Z M 24 10 H 0 V 14 H 24 V 10 Z M 24 18 H 0 V 22 H 24 V 18 Z" />
@@ -644,9 +585,13 @@ function getDatabases()
 
       <form class="login centered ">
         <label>Password:
-          <input id=password name=password type="password" value="123">
+          <input id=password name=password type="password">
+        </label>
+        <label>store
+          <input id=storePW name=storePW type="checkbox">
         </label>
         <input type="submit" value="submit">
+        <label id="wrongPW"></label>
       </form>
 
     </article>
@@ -675,23 +620,38 @@ function getDatabases()
   const dbList = document.querySelector('.dbList')
   const tableList = document.querySelector('.tableList')
   const article = document.querySelector('article')
+  const logOutBtn = document.querySelector('#logOut')
+  const storePW = document.querySelector('#storePW')
+  const wrongPW = document.querySelector('#wrongPW')
 
 
   // LISTENER
   loginForm.addEventListener('submit', login)
-  dbList.addEventListener('click', getDatabasesTables)
+  dbList.addEventListener('click', getTables)
   tableList.addEventListener('click', getRows)
   article.addEventListener('dblclick', makeEditable)
+  logOutBtn.addEventListener('click', logOut)
 
+
+  function logOut() {
+    window.localStorage.setItem('DBEPW', '')
+    window.localStorage.setItem('DBEDB', '')
+    window.localStorage.setItem('DBETA', '')
+    window.location.reload();
+  }
+
+  function store(key, value) {
+    if (DBobject.store) {
+      window.localStorage.setItem(key, value)
+    }
+  }
 
   //   VARIABLES
   var DBobject = {
-    session: {
-      id: 0,
-      SESSION: '',
-    },
-    database: '',
-    table: '',
+    password: window.localStorage.getItem('DBEPW') || '',
+    database: window.localStorage.getItem('DBEPW') || '',
+    table: window.localStorage.getItem('DBETA') || '',
+    store: false,
     data: {
       databases: '',
       tables: '',
@@ -700,6 +660,36 @@ function getDatabases()
       value: ''
     }
   }
+
+
+  /**
+   * 
+   * ONLOAD
+   * 
+   */
+  window.addEventListener('load', async () => {
+
+
+    // if password is saved in localstorage, login directly
+    if (window.localStorage.getItem('DBEPW')) {
+      await login()
+      // if databasename in localstorage get tables
+      if (window.localStorage.getItem('DBEDB')) {
+        getTables(window.localStorage.getItem('DBEDB'))
+        // if tablename in localstorage get rows
+        if (window.localStorage.getItem('DBETA')) {
+          setTimeout(() => {
+            getRows(window.localStorage.getItem('DBETA'))
+          }, 500);
+        }
+      }
+    }
+
+  })
+
+
+
+
 
 
 
@@ -711,28 +701,36 @@ function getDatabases()
    * 
    */
   function makeEditable(event) {
-    event.preventDefault()
-    event.target.setAttribute("contenteditable", true);
-    event.target.focus()
-    event.target.addEventListener('focusout', updateValue)
+    if (event.target.tagName === 'TD') {
+      event.preventDefault()
+      event.target.setAttribute("contenteditable", true);
+      event.target.focus()
+      event.target.addEventListener('focusout', updateValue)
+      event.target.addEventListener('keypress', updateValueOnEnter)
+    }
     // console.log(event.target)
   }
 
+  /**
+   * 
+   * UPDATE VALUE ON ENTER KEY
+   * 
+   */
+  function updateValueOnEnter(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      updateValue(event)
+    }
 
+  }
 
+  /**
+   * 
+   * UPDATE VALUE
+   * 
+   */
   function updateValue(event) {
     event.target.classList.add('waiting')
-
-    var data = {
-      database: event.target.dataset.database,
-      table: event.target.dataset.table,
-      row: event.target.dataset.attr,
-      id: event.target.dataset.id,
-      value: event.target.textContent,
-    }
-    // console.log(data)
-
-
     fetch('admin.php?updateValue', {
         method: 'POST',
         mode: "same-origin",
@@ -742,8 +740,9 @@ function getDatabases()
           'Accept': 'application/json'
         },
         body: JSON.stringify({
-          database: event.target.dataset.database,
-          table: event.target.dataset.table,
+          password: DBobject.password,
+          database: DBobject.database,
+          table: DBobject.table,
           row: event.target.dataset.attr,
           id: event.target.dataset.id,
           value: event.target.textContent,
@@ -751,10 +750,12 @@ function getDatabases()
       })
       .then(response => response.json())
       .then(data => {
-        console.log(data)
-        if (data.status === 200) {
+        console.log('data from updateValue', data)
+        if (data.message == true) { // no type checking!!
           event.target.classList.remove('waiting')
           event.target.classList.add('success')
+          event.target.setAttribute("contenteditable", false);
+          event.target.blur()
         }
         // read error message
         else {
@@ -768,9 +769,6 @@ function getDatabases()
         event.target.classList.add('error')
         console.error('Error:', error);
       });
-
-
-
     setTimeout(() => {
       event.target.classList.remove('success')
     }, 1000);
@@ -787,33 +785,39 @@ function getDatabases()
    * GET TABLE CONTENT
    * 
    */
-  function getRows(event) {
-    event.preventDefault()
-    if (event.target.className === 'getRows') {
-      let table = event.target.dataset.table
-      let database = event.target.dataset.database
-      // console.log(event.target)
-      fetch(`admin.php?getRows=${table}&database=${database}`, {
-          method: 'GET',
-          mode: "same-origin",
-          credentials: "same-origin",
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-        })
-        .then(response => response.json())
-        .then(data => {
-          document.querySelector('.showTable').innerHTML = `${table}`
-          DBobject.table = table
-          DBobject.session.id = data.session.id
-          DBobject.data.rows = data.data.rows
-          refresh();
-        })
-        .catch((error) => {
-          console.error('Error:', error);
-        });
+  async function getRows(event) {
+    if (event.type === 'click' && event.target.className === 'getRows') {
+      event.preventDefault()
+      DBobject.table = event.target.dataset.table
+      DBobject.database = event.target.dataset.database
+    } else {
+      DBobject.table = event
+      DBobject.database = DBobject.database
     }
+    fetch(`admin.php?getRows`, {
+        method: 'POST',
+        mode: "same-origin",
+        credentials: "same-origin",
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          password: DBobject.password,
+          database: DBobject.database,
+          table: DBobject.table,
+        }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        document.querySelector('.showTable').innerHTML = DBobject.table
+        store('DBETA', DBobject.table)
+        DBobject.data.rows = data.data.rows
+        refresh();
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
   }
 
 
@@ -826,36 +830,42 @@ function getDatabases()
    * GET DATABASE TABLES
    * 
    */
-  function getDatabasesTables(event) {
-    event.preventDefault()
-    console.log(event.target)
-
-    if (event.target.className === 'getTables') {
-      let file = event.target.dataset.file
-      // console.log(event.target)
-      fetch('admin.php?getTables=' + file, {
-          method: 'GET',
-          mode: "same-origin",
-          credentials: "same-origin",
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-        })
-        .then(response => response.json())
-        .then(data => {
-          document.querySelector('.showDatabase').innerHTML = file.split('.')[0]
-          document.querySelector('.showTable').innerHTML = ''
-          DBobject.database = file
-          DBobject.session.id = data.session.id
-          DBobject.data.tables = data.data.tables
-          DBobject.data.rows = ''
-          refresh();
-        })
-        .catch((error) => {
-          console.error('Error:', error);
-        });
+  async function getTables(event) {
+    if (event.type === 'click' && event.target.className === 'getTables') {
+      event.preventDefault()
+      DBobject.database = event.target.dataset.file
+    } else {
+      DBobject.database = event
     }
+    console.log('getTables', DBobject)
+    fetch('admin.php?getTables', {
+        method: 'POST',
+        mode: "same-origin",
+        credentials: "same-origin",
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          password: DBobject.password,
+          database: DBobject.database,
+          table: DBobject.table,
+        }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        store('DBEDB', DBobject.database)
+        document.querySelector('.showTable').innerHTML = 'choose table'
+        document.querySelector('article').innerHTML = ''
+
+        DBobject.data.rows = ''
+        DBobject.data.tables = data.data.tables
+        refresh();
+        return true;
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
   }
 
 
@@ -865,11 +875,17 @@ function getDatabases()
 
   /**
    * 
-   * LOGIN
+   * LOGIN 
    * 
    */
-  function login(event) {
-    event.preventDefault()
+  async function login(event = '') {
+
+    if (event !== '') {
+      event.preventDefault()
+      DBobject.password = document.querySelector('form #password').value;
+    } else {
+      DBobject.password = window.localStorage.getItem('DBEPW')
+    }
     fetch('admin.php?login', {
         method: 'POST',
         mode: "same-origin",
@@ -879,14 +895,25 @@ function getDatabases()
           'Accept': 'application/json'
         },
         body: JSON.stringify({
-          password: document.querySelector('form #password').value
+          password: DBobject.password
         }),
       })
       .then(response => response.json())
       .then(data => {
-        DBobject.session.id = data.session.id
-        DBobject.data.databases = data.data.databases
-        refresh();
+        console.log(data)
+        if (data.data.databases) {
+
+          if (storePW.checked) {
+            DBobject.store = true
+          }
+          store('DBEPW', DBobject.password)
+          DBobject.data.databases = data.data.databases
+          // document.querySelector('article').innerHTML = ''
+          refresh();
+        } else {
+          wrongPW.innerHTML = 'Password incorrect'
+          console.info('wrong password')
+        }
       })
       .catch((error) => {
         console.error('Error:', error);
@@ -902,7 +929,6 @@ function getDatabases()
   function refresh() {
     console.log('refresh: ', DBobject)
 
-
     // databases list
     //  
     if (DBobject.data.databases !== '') {
@@ -912,8 +938,7 @@ function getDatabases()
       });
       document.querySelector('.dbList').style.display = 'block'
       document.querySelector('.dbList div').innerHTML = DB
-      document.querySelector('article').innerHTML = '<h3 class="centered"> choose database</h3>'
-
+      document.querySelector('.showDatabase').innerHTML = 'choose database'
     }
 
     // table list
@@ -925,7 +950,6 @@ function getDatabases()
       });
       document.querySelector('.tableList').style.display = 'block'
       document.querySelector('.tableList div').innerHTML = TAB
-      document.querySelector('article').innerHTML = '<h3 class="centered"> choose table</h3>'
     }
 
     // rows
