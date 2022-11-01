@@ -78,6 +78,16 @@ if (isset($_GET['updateValue'])) {
 }
 
 
+if (isset($_GET['deleteRow'])) {
+    $response = [
+      'API' => true,
+      'message' => deleteRow(),
+    ];
+}
+
+
+
+
 
 //
 // OUTPUT
@@ -101,6 +111,26 @@ if ($response['API'] === true) {
 /////////////////////////////////    PHP    FUNCTIONS    ///////////////////////////
 /////////////////////////////////    PHP    FUNCTIONS    ///////////////////////////
 /////////////////////////////////    PHP    FUNCTIONS    ///////////////////////////
+
+
+
+function deleteRow()
+{
+    global $request, $dbFolder, $response;
+    // pprint($request);
+    $database = $request['database'];
+    $table = $request['table'];
+    $row = $request['row'];
+
+    $db = new SQLite3($dbFolder . "/" . $database);
+    $stmt = $db->prepare("DELETE FROM $table WHERE id=$row  ");
+    $result = $stmt->execute();
+    if ($result) {
+        return true;
+    } else {
+        return 'database error';
+    }
+}
 
 
 
@@ -444,6 +474,10 @@ function getDatabases()
     color: var(--green);
   }
 
+  .itemList {
+    max-height: 300px;
+    overflow-y: scroll;
+  }
 
   /*   TABLE */
   .dataTable {
@@ -511,6 +545,13 @@ function getDatabases()
     outline: 2px solid var(--red);
   }
 
+  .dataTable th.deleteRow,
+  .dataTable td.deleteRow {
+    cursor: pointer;
+    min-width: 20px;
+    max-width: 20px;
+  }
+
   .dataTable th.id,
   .dataTable td.id {
     min-width: 50px;
@@ -521,6 +562,39 @@ function getDatabases()
   .dataTable td.date {
     min-width: 250px;
     max-width: 250px;
+  }
+
+
+  #confirmBox {
+    display: none;
+    color: var(--yellow);
+    background-color: var(--bg-sidebar);
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+    max-width: 300px;
+    position: fixed;
+    left: 50%;
+    margin-left: -150px;
+    margin-top: 10vh;
+    padding: .5rem;
+    box-sizing: border-box;
+    text-align: center;
+  }
+
+  #confirmBox button {
+    background-color: var(--text-color);
+    display: inline-block;
+    border-radius: 3px;
+    border: 1px solid var(--bg-header);
+    padding: 2px;
+    margin-inline: .5rem;
+    text-align: center;
+    width: 80px;
+    cursor: pointer;
+  }
+
+  #confirmBox button:hover {
+    background-color: #ddd;
   }
   </style>
 </head>
@@ -573,22 +647,22 @@ function getDatabases()
     <input id="sidebarCKB" type="checkbox" style="display:none">
     <nav>
       <div class="dbList">
-        <h3>Databases</h3>
-        <div></div>
+        <h3>Database</h3>
+        <div class="itemList"></div>
       </div>
       <div class="tableList">
-        <h3>Tables</h3>
-        <div></div>
+        <h3>Table</h3>
+        <div class="itemList"> </div>
       </div>
     </nav>
     <article>
 
       <form class="login centered ">
         <label>Password:
-          <input id=password name=password type="password">
+          <input id=password name=password type="password" value="123">
         </label>
         <label>store
-          <input id=storePW name=storePW type="checkbox">
+          <input id=storePW name=storePW type="checkbox" checked=checked>
         </label>
         <input type="submit" value="submit">
         <label id="wrongPW"></label>
@@ -601,7 +675,11 @@ function getDatabases()
     <div><a href="#"></a></div>
     <div></div>
   </footer>
-
+  <div id="confirmBox">
+    <div id="confirmText">confirm</div>
+    <button id="confirmTrue">Yes</button>
+    <button id="confirmFalse">No</button>
+  </div>
   <!-- 
   //  
   //   ######   ######  ########  #### ########  ########
@@ -630,6 +708,7 @@ function getDatabases()
   dbList.addEventListener('click', getTables)
   tableList.addEventListener('click', getRows)
   article.addEventListener('dblclick', makeEditable)
+  article.addEventListener('click', deleteRow)
   logOutBtn.addEventListener('click', logOut)
 
 
@@ -668,8 +747,6 @@ function getDatabases()
    * 
    */
   window.addEventListener('load', async () => {
-
-
     // if password is saved in localstorage, login directly
     if (window.localStorage.getItem('DBEPW')) {
       await login()
@@ -701,7 +778,7 @@ function getDatabases()
    * 
    */
   function makeEditable(event) {
-    if (event.target.tagName === 'TD') {
+    if (event.target.tagName === 'TD' && event.target.className !== 'deleteRow') {
       event.preventDefault()
       event.target.setAttribute("contenteditable", true);
       event.target.focus()
@@ -710,6 +787,81 @@ function getDatabases()
     }
     // console.log(event.target)
   }
+
+  /**
+   * 
+   * DELETE ROW
+   * 
+   */
+  async function deleteRow(event) {
+
+    if (event.target.tagName === 'TD' && event.target.className === 'deleteRow') {
+
+      let rowID = event.target.dataset.id
+      let text = 'Delete row ' + rowID + ' ?'
+      confirm(del, rowID, text)
+
+
+      function del(rowID) {
+        console.log('delete row: ', rowID)
+
+        fetch('admin.php?deleteRow', {
+            method: 'POST',
+            mode: "same-origin",
+            credentials: "same-origin",
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+              password: DBobject.password,
+              database: DBobject.database,
+              table: DBobject.table,
+              row: rowID,
+            }),
+          })
+          .then(response => response.json())
+          .then(data => {
+            console.log('data from deleteRow', data)
+            getRows(DBobject.table)
+
+          })
+          .catch((error) => {
+            console.error('Error:', error);
+          });
+
+      }
+
+    }
+
+  }
+
+
+  /**
+   * 
+   * CONFIRM
+   * 
+   */
+  async function confirm(callback, text) {
+    document.getElementById('confirmBox').style.display = "block";
+    document.getElementById('confirmText').innerHTML = arguments[2]
+    document.getElementById('confirmBox').addEventListener('click', async (el) => {
+
+      // YES
+      if (el.target.id === 'confirmTrue') {
+        callback(arguments[1]);
+        document.getElementById('confirmBox').style.display = "none";
+      }
+      // NO
+      else if (el.target.id === 'confirmFalse') {
+        document.getElementById('confirmBox').style.display = "none";
+      }
+
+    })
+  }
+
+
+
 
   /**
    * 
@@ -773,7 +925,6 @@ function getDatabases()
       event.target.classList.remove('success')
     }, 1000);
   }
-
 
 
 
@@ -856,6 +1007,8 @@ function getDatabases()
       .then(data => {
         store('DBEDB', DBobject.database)
         document.querySelector('.showTable').innerHTML = 'choose table'
+        document.querySelector('.showDatabase').innerHTML = DBobject.database
+
         document.querySelector('article').innerHTML = ''
 
         DBobject.data.rows = ''
@@ -908,6 +1061,7 @@ function getDatabases()
           }
           store('DBEPW', DBobject.password)
           DBobject.data.databases = data.data.databases
+          document.querySelector('.showDatabase').innerHTML = 'choose database'
           // document.querySelector('article').innerHTML = ''
           refresh();
         } else {
@@ -938,7 +1092,6 @@ function getDatabases()
       });
       document.querySelector('.dbList').style.display = 'block'
       document.querySelector('.dbList div').innerHTML = DB
-      document.querySelector('.showDatabase').innerHTML = 'choose database'
     }
 
     // table list
@@ -987,6 +1140,13 @@ function getDatabases()
     function makeTableHead(data) {
       const row = document.createElement("tr");
       const objKeys = Object.keys(data[0]);
+
+      const cell = document.createElement("th");
+      cell.classList.add('deleteRow');
+      cell.innerHTML = 'x';
+      row.appendChild(cell);
+
+
       objKeys.map((key) => {
         const cell = document.createElement("th");
         cell.setAttribute("data-attr", key);
@@ -1009,13 +1169,19 @@ function getDatabases()
       const row = document.createElement("tr");
       const objKeys = Object.keys(obj);
       const id = obj['id']
+
+      const cell = document.createElement("td");
+      cell.setAttribute("data-id", id);
+      cell.classList.add('deleteRow');
+      cell.innerHTML = 'x';
+      row.appendChild(cell);
+
+
       objKeys.map((key) => {
         const cell = document.createElement("td");
-
         cell.setAttribute("data-database", DBobject.database);
         cell.setAttribute("data-table", DBobject.table);
         cell.setAttribute("data-id", id);
-
         cell.setAttribute("data-attr", key);
         cell.classList.add(key);
         cell.innerHTML = obj[key];
