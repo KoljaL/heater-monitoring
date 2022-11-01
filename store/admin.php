@@ -284,6 +284,19 @@ function getDatabases()
     /* --link-color: rgb(140, 180, 255); */
     --link-hover-color: rgb(94, 158, 255);
     --border-color: #858585;
+
+    --icon-checkbox: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(255, 255, 255)' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+    --icon-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(162, 175, 185)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    --icon-chevron-button: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(255, 255, 255)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    --icon-chevron-button-inverse: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(0, 0, 0)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    --icon-close: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(115, 130, 140)' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='6' x2='6' y2='18'%3E%3C/line%3E%3Cline x1='6' y1='6' x2='18' y2='18'%3E%3C/line%3E%3C/svg%3E");
+    --icon-date: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(162, 175, 185)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E");
+    --icon-invalid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(183, 28, 28)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cline x1='12' y1='8' x2='12' y2='12'%3E%3C/line%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'%3E%3C/line%3E%3C/svg%3E");
+    --icon-minus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(255, 255, 255)' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='5' y1='12' x2='19' y2='12'%3E%3C/line%3E%3C/svg%3E");
+    --icon-search: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(162, 175, 185)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
+    --icon-time: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(162, 175, 185)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cpolyline points='12 6 12 12 16 14'%3E%3C/polyline%3E%3C/svg%3E");
+    --icon-valid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(46, 125, 50)' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+
   }
 
 
@@ -564,6 +577,67 @@ function getDatabases()
     max-width: 250px;
   }
 
+  #newRow {
+    position: absolute;
+    top: 20px;
+    left: 300px;
+    z-index: 100;
+    width: 300px;
+    background-color: var(--bg-sidebar);
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+    padding: 1rem;
+  }
+
+  #newRow h3 {
+    position: relative;
+    margin: .5rem;
+    margin-top: 0;
+    text-align: center;
+    color: var(--yellow);
+  }
+
+  #newRow h3 #closeNewRow {
+    background-image: var(--icon-close);
+    content: ' ';
+    width: 20px;
+    height: 20px;
+    color: var(--text-color);
+    cursor: pointer;
+    position: absolute;
+    top: -.6rem;
+    right: -.5rem;
+  }
+
+  #newRow h3 #closeNewRow:hover {
+    color: var(--red);
+  }
+
+  #newRow form {
+    display: flex;
+    flex-direction: column;
+  }
+
+
+  #newRow form input {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+
+  #newRow form input[type=submit] {
+    cursor: pointer;
+    margin-top: 1rem;
+    margin-bottom: .5rem;
+    color: var(--bg-header);
+    background-color: var(--text-color);
+    border: 1px solid var(--border-color);
+
+  }
+
+  #newRow form input[type=submit]:hover {
+    background-color: #ddd;
+
+  }
 
   #confirmBox {
     display: none;
@@ -597,6 +671,7 @@ function getDatabases()
     background-color: #ddd;
   }
   </style>
+  <!-- <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css"> -->
 </head>
 <!-- 
 //  
@@ -680,6 +755,11 @@ function getDatabases()
     <button id="confirmTrue">Yes</button>
     <button id="confirmFalse">No</button>
   </div>
+
+  <div id="newRow">
+    <h3>add newRow <span id="closeNewRow"></span></h3>
+    <form></form>
+  </div>
   <!-- 
   //  
   //   ######   ######  ########  #### ########  ########
@@ -701,6 +781,7 @@ function getDatabases()
   const logOutBtn = document.querySelector('#logOut')
   const storePW = document.querySelector('#storePW')
   const wrongPW = document.querySelector('#wrongPW')
+  const closeNewRowBtn = document.querySelector('#closeNewRow')
 
 
   // LISTENER
@@ -710,6 +791,7 @@ function getDatabases()
   article.addEventListener('dblclick', makeEditable)
   article.addEventListener('click', deleteRow)
   logOutBtn.addEventListener('click', logOut)
+  closeNewRowBtn.addEventListener('click', closeNewRow)
 
 
   function logOut() {
@@ -768,7 +850,9 @@ function getDatabases()
 
 
 
-
+  function closeNewRow() {
+    document.querySelector('#newRow').style.display = 'none';
+  }
 
 
 
@@ -788,23 +872,21 @@ function getDatabases()
     // console.log(event.target)
   }
 
+
+
   /**
    * 
    * DELETE ROW
    * 
    */
   async function deleteRow(event) {
-
     if (event.target.tagName === 'TD' && event.target.className === 'deleteRow') {
-
+      // load confirm with callback
       let rowID = event.target.dataset.id
       let text = 'Delete row ' + rowID + ' ?'
       confirm(del, rowID, text)
-
-
+      // delete row function
       function del(rowID) {
-        console.log('delete row: ', rowID)
-
         fetch('admin.php?deleteRow', {
             method: 'POST',
             mode: "same-origin",
@@ -822,18 +904,13 @@ function getDatabases()
           })
           .then(response => response.json())
           .then(data => {
-            console.log('data from deleteRow', data)
             getRows(DBobject.table)
-
           })
           .catch((error) => {
             console.error('Error:', error);
           });
-
       }
-
     }
-
   }
 
 
@@ -902,7 +979,7 @@ function getDatabases()
       })
       .then(response => response.json())
       .then(data => {
-        console.log('data from updateValue', data)
+        // console.log('data from updateValue', data)
         if (data.message == true) { // no type checking!!
           event.target.classList.remove('waiting')
           event.target.classList.add('success')
@@ -988,7 +1065,7 @@ function getDatabases()
     } else {
       DBobject.database = event
     }
-    console.log('getTables', DBobject)
+    // console.log('getTables', DBobject)
     fetch('admin.php?getTables', {
         method: 'POST',
         mode: "same-origin",
@@ -1053,7 +1130,7 @@ function getDatabases()
       })
       .then(response => response.json())
       .then(data => {
-        console.log(data)
+        // console.log(data)
         if (data.data.databases) {
 
           if (storePW.checked) {
@@ -1081,7 +1158,7 @@ function getDatabases()
    * 
    */
   function refresh() {
-    console.log('refresh: ', DBobject)
+    // console.log('refresh: ', DBobject)
 
     // databases list
     //  
@@ -1121,6 +1198,7 @@ function getDatabases()
    * MAKE TABLE
    * 
    */
+  // https://jsfiddle.net/rh5aoxsL/
   function makeTable(data) {
 
     // create table
@@ -1134,8 +1212,38 @@ function getDatabases()
     document.querySelector('article').appendChild(table)
 
     makeTableHead(data);
+    makeNewRow(data);
     makeTableBody(data);
     makeSort(data);
+
+
+    function makeNewRow(data) {
+      const objKeys = Object.keys(data[0]);
+      objKeys.map((key) => {
+        if (key !== 'id') {
+
+          const label = document.createElement("label");
+          label.innerHTML = key;
+
+          const input = document.createElement("input");
+          input.setAttribute("type", 'text');
+          input.setAttribute("name", key);
+          input.classList.add(key);
+
+          label.appendChild(input);
+          document.querySelector('#newRow form').appendChild(label);
+
+        }
+      });
+
+
+      const submit = document.createElement("input");
+
+      submit.setAttribute("type", 'submit');
+      submit.setAttribute("value", 'save');
+
+      document.querySelector('#newRow form').appendChild(submit);
+    };
 
     function makeTableHead(data) {
       const row = document.createElement("tr");
@@ -1157,6 +1265,8 @@ function getDatabases()
       });
       tableHead.appendChild(row);
     };
+
+
 
     function makeTableBody(data) {
       data.map((obj) => {
