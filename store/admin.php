@@ -625,6 +625,7 @@ function getDatabases()
   }
 
   #newRow form input[type=submit] {
+    display: none;
     cursor: pointer;
     margin-top: 1rem;
     margin-bottom: .5rem;
@@ -782,6 +783,7 @@ function getDatabases()
   const storePW = document.querySelector('#storePW')
   const wrongPW = document.querySelector('#wrongPW')
   const closeNewRowBtn = document.querySelector('#closeNewRow')
+  var focusedCell; //focused cell in table
 
 
   // LISTENER
@@ -789,6 +791,7 @@ function getDatabases()
   dbList.addEventListener('click', getTables)
   tableList.addEventListener('click', getRows)
   article.addEventListener('dblclick', makeEditable)
+  article.addEventListener('click', setFocusOnCell)
   article.addEventListener('click', deleteRow)
   logOutBtn.addEventListener('click', logOut)
   closeNewRowBtn.addEventListener('click', closeNewRow)
@@ -849,7 +852,11 @@ function getDatabases()
 
 
 
-
+  /**
+   * 
+   * CLOSE NEW ROW DIALOG
+   * 
+   */
   function closeNewRow() {
     document.querySelector('#newRow').style.display = 'none';
   }
@@ -862,16 +869,33 @@ function getDatabases()
    * 
    */
   function makeEditable(event) {
+    console.log('makeEditable', event)
     if (event.target.tagName === 'TD' && event.target.className !== 'deleteRow') {
       event.preventDefault()
       event.target.setAttribute("contenteditable", true);
       event.target.focus()
       event.target.addEventListener('focusout', updateValue)
       event.target.addEventListener('keypress', updateValueOnEnter)
+      focusedCell = event.target
     }
     // console.log(event.target)
+    console.log(focusedCell)
   }
 
+  /**
+   * 
+   * SET FOCUS ON CLICKED CELL
+   * 
+   */
+  function setFocusOnCell(event) {
+    console.log('setFocusOnCell', event)
+    if (event.target.tagName === 'TD' && event.target.className !== 'deleteRow') {
+      event.preventDefault()
+      event.target.focus()
+      // event.target.addEventListener('keypress', updateValueOnEnter)
+      focusedCell = event.target
+    }
+  }
 
 
   /**
@@ -1193,6 +1217,53 @@ function getDatabases()
 
 
 
+  function keyOnTableStyling(sibling) {
+    if (sibling != null) {
+      focusedCell.focus();
+      focusedCell.style.backgroundColor = '';
+      focusedCell.style.color = '';
+      sibling.focus();
+      sibling.style.backgroundColor = 'green';
+      sibling.style.color = 'white';
+      focusedCell = sibling;
+    }
+  }
+
+
+  function keyOnTable(e) {
+    e = e || window.event;
+    console.log(e.keyCode)
+    if (e.keyCode == '38') {
+      // up arrow
+      var idx = focusedCell.cellIndex;
+      var nextrow = focusedCell.parentElement.previousElementSibling;
+      if (nextrow != null) {
+        var sibling = nextrow.cells[idx];
+        keyOnTableStyling(sibling);
+      }
+    } else if (e.keyCode == '40') {
+      // down arrow
+      var idx = focusedCell.cellIndex;
+      var nextrow = focusedCell.parentElement.nextElementSibling;
+      if (nextrow != null) {
+        var sibling = nextrow.cells[idx];
+        keyOnTableStyling(sibling);
+      }
+    } else if (e.keyCode == '37') {
+      // left arrow
+      var sibling = focusedCell.previousElementSibling;
+      keyOnTableStyling(sibling);
+    } else if (e.keyCode == '39') {
+      // right arrow
+      var sibling = focusedCell.nextElementSibling;
+      keyOnTableStyling(sibling);
+    } else if (e.keyCode == '32') {
+      // space
+      makeEditable(e)
+    }
+  }
+
+
   /**
    * 
    * MAKE TABLE
@@ -1215,6 +1286,9 @@ function getDatabases()
     makeNewRow(data);
     makeTableBody(data);
     makeSort(data);
+
+    table.onkeydown = keyOnTable;
+
 
 
     function makeNewRow(data) {
