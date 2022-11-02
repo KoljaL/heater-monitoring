@@ -78,11 +78,21 @@ if (isset($_GET['updateValue'])) {
 }
 
 
+
 if (isset($_GET['deleteRow'])) {
     $response = [
       'API' => true,
       'message' => deleteRow(),
     ];
+}
+
+
+if (isset($_GET['saveNewRow'])) {
+    // pprint($request);
+    $response = [
+        'API' => true,
+        'message' => saveNewRow(),
+      ];
 }
 
 
@@ -114,6 +124,38 @@ if ($response['API'] === true) {
 
 
 
+function saveNewRow()
+{
+    global $request, $dbFolder, $response;
+    // pprint($request);
+    $database = $request['database'];
+    $table = $request['table'];
+    $data = $request['data'];
+
+    if (isset($data['date']) && $data['date'] === '') {
+        $data['date'] = date("Y-m-d H:i:s");
+    }
+
+    $db = new SQLite3($dbFolder . "/" . $database);
+
+    // make strings from array
+    $columns = '(' . implode(',', array_keys($data)) . ')';
+    $values = "('" . implode("','", $data) . "')";
+    // pprint("INSERT INTO $table" . $columns . " VALUES" . $values);
+
+    // insert into DB
+    $stmt = $db->prepare("INSERT INTO $table" . $columns . " VALUES" . $values);
+
+    $result = $stmt->execute();
+    if ($result) {
+        return true;
+    } else {
+        return 'database error';
+    }
+}
+
+
+
 function deleteRow()
 {
     global $request, $dbFolder, $response;
@@ -121,7 +163,6 @@ function deleteRow()
     $database = $request['database'];
     $table = $request['table'];
     $row = $request['row'];
-
     $db = new SQLite3($dbFolder . "/" . $database);
     $stmt = $db->prepare("DELETE FROM $table WHERE id=$row  ");
     $result = $stmt->execute();
@@ -296,7 +337,6 @@ function getDatabases()
     --icon-search: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(162, 175, 185)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
     --icon-time: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(162, 175, 185)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cpolyline points='12 6 12 12 16 14'%3E%3C/polyline%3E%3C/svg%3E");
     --icon-valid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(46, 125, 50)' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
-
   }
 
 
@@ -310,6 +350,7 @@ function getDatabases()
     -ms-overflow-style: none;
     scrollbar-width: none;
     box-sizing: border-box;
+    transition: all .5s;
   }
 
   html {
@@ -339,12 +380,24 @@ function getDatabases()
   }
 
   header .menuIcon {
-    width: 24px;
+    display: inline-flex;
     height: 24px;
   }
 
+  header .menuIcon svg {
+    fill: var(--text-color);
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    margin-left: 1rem;
+  }
+
+  header .menuIcon svg:hover {
+    fill: var(--blue);
+  }
+
   header .breadcrumb {
-    min-width: 300px;
+    min-width: max-content;
     align-self: end;
     margin-bottom: 3px;
   }
@@ -356,7 +409,18 @@ function getDatabases()
   header .showTable {
     color: var(--green);
     padding-left: 1rem;
+  }
 
+  #openNewRowBtn {
+    color: var(--yellow);
+    padding-top: 1rem;
+    cursor: pointer;
+  }
+
+  #openNewTableBtn {
+    color: var(--yellow);
+    padding-top: 1rem;
+    cursor: pointer;
   }
 
   footer {
@@ -372,6 +436,7 @@ function getDatabases()
 
   main {
     flex-grow: 1;
+    width: 100%;
     display: flex;
     flex-direction: row;
     outline: 1px solid var(--border-color);
@@ -406,6 +471,7 @@ function getDatabases()
 
     main nav {
       overflow: hidden;
+      position: absolute;
       width: 0;
       transform: translateX(calc(var(--sidebar-width) * -1));
     }
@@ -428,6 +494,7 @@ function getDatabases()
     /* color: var(--link-hover-color); */
     filter: brightness(1.25);
   }
+
 
 
   nav ul {
@@ -502,6 +569,12 @@ function getDatabases()
     width: calc(100vw - var(--sidebar-width) - 1px);
   }
 
+  @media only screen and (max-width: 800px) {
+    .dataTable {
+      width: 100vw;
+    }
+  }
+
   .dataTable thead td {
     cursor: pointer;
   }
@@ -525,6 +598,7 @@ function getDatabases()
 
   .dataTable tbody tr:hover {
     background-color: var(--bg-sidebar);
+    backdrop-filter: brightness(0.8)
   }
 
   .dataTable th {
@@ -538,24 +612,28 @@ function getDatabases()
     padding-inline: .5rem;
     min-width: 200px;
     white-space: nowrap;
-    outline: 2px solid transparent;
-    border-radius: .5rem;
+    outline: 1px solid transparent;
+    border-radius: .25rem;
   }
 
-  td[contenteditable]:focus {
-    outline: 2px solid var(--yellow);
+  td:focus {
+    outline: 1px solid var(--text-color);
   }
 
-  td[contenteditable].waiting {
-    outline: 2px solid var(--blue);
+  td.focus {
+    outline: 1px solid var(--yellow);
+  }
+
+  td[contenteditable="true"] {
+    outline: 1px solid var(--blue);
   }
 
   td[contenteditable].success {
-    outline: 2px solid var(--green);
+    outline: 1px solid var(--green);
   }
 
   td[contenteditable].error {
-    outline: 2px solid var(--red);
+    outline: 1px solid var(--red);
   }
 
   .dataTable th.deleteRow,
@@ -563,7 +641,14 @@ function getDatabases()
     cursor: pointer;
     min-width: 20px;
     max-width: 20px;
+    color: var(--yellow);
   }
+
+
+  .dataTable td.deleteRow:hover {
+    color: var(--red);
+  }
+
 
   .dataTable th.id,
   .dataTable td.id {
@@ -578,6 +663,7 @@ function getDatabases()
   }
 
   #newRow {
+    display: none;
     position: absolute;
     top: 20px;
     left: 300px;
@@ -625,7 +711,6 @@ function getDatabases()
   }
 
   #newRow form input[type=submit] {
-    display: none;
     cursor: pointer;
     margin-top: 1rem;
     margin-bottom: .5rem;
@@ -641,7 +726,6 @@ function getDatabases()
   }
 
   #confirmBox {
-    display: none;
     color: var(--yellow);
     background-color: var(--bg-sidebar);
     border-radius: 5px;
@@ -654,6 +738,19 @@ function getDatabases()
     padding: .5rem;
     box-sizing: border-box;
     text-align: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 500ms ease;
+    /* transition: all 500ms cubic-bezier(0.335, 0.010, 0.030, 1.360); */
+    top: -10vh;
+  }
+
+  #confirmBox.open {
+
+    opacity: 1;
+    visibility: visible;
+    top: 0;
+
   }
 
   #confirmBox button {
@@ -707,17 +804,27 @@ function getDatabases()
     </h2>
     <div class=breadcrumb>
       <span class="showDatabase"></span>
-      <span class="showTable">
-      </span>
+      <span class="showTable"></span>
     </div>
+
     <div class=menuIcon>
-      <label id=logOut>logOut</label>
+      <label id=logOut>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
+          <rect width="24" height="24" transform="rotate(90 12 12)" opacity="0" />
+          <path d="M7 6a1 1 0 0 0 0-2H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h2a1 1 0 0 0 0-2H6V6z" />
+          <path d="M20.82 11.42l-2.82-4a1 1 0 0 0-1.39-.24 1 1 0 0 0-.24 1.4L18.09 11H10a1 1 0 0 0 0 2h8l-1.8 2.4a1 1 0 0 0 .2 1.4 1 1 0 0 0 .6.2 1 1 0 0 0 .8-.4l3-4a1 1 0 0 0 .02-1.18z" />
+        </svg>
+      </label>
       <label id="toggleSidebar" for="sidebarCKB">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="white">
-          <path d="M 24 6 H 0 V 2 H 24 V 6 Z M 24 10 H 0 V 14 H 24 V 10 Z M 24 18 H 0 V 22 H 24 V 18 Z" />
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <rect width="24" height="24" transform="rotate(180 12 12)" opacity="0" />
+          <rect x="3" y="11" width="18" height="2" rx=".95" ry=".95" />
+          <rect x="3" y="16" width="18" height="2" rx=".95" ry=".95" />
+          <rect x="3" y="6" width="18" height="2" rx=".95" ry=".95" />
         </svg>
       </label>
     </div>
+
   </header>
   <main>
     <input id="sidebarCKB" type="checkbox" style="display:none">
@@ -729,6 +836,8 @@ function getDatabases()
       <div class="tableList">
         <h3>Table</h3>
         <div class="itemList"> </div>
+        <span id="openNewRowBtn">new Row</span>
+
       </div>
     </nav>
     <article>
@@ -751,6 +860,8 @@ function getDatabases()
     <div><a href="#"></a></div>
     <div></div>
   </footer>
+
+
   <div id="confirmBox">
     <div id="confirmText">confirm</div>
     <button id="confirmTrue">Yes</button>
@@ -759,8 +870,10 @@ function getDatabases()
 
   <div id="newRow">
     <h3>add newRow <span id="closeNewRow"></span></h3>
-    <form></form>
+    <form class="saveNewRow" onsubmit="return saveNewRow(event)"></form>
   </div>
+
+
   <!-- 
   //  
   //   ######   ######  ########  #### ########  ########
@@ -777,12 +890,16 @@ function getDatabases()
   // ELEMENTS
   const loginForm = document.querySelector('form.login')
   const dbList = document.querySelector('.dbList')
-  const tableList = document.querySelector('.tableList')
+  const tableList = document.querySelector('.tableList .itemList')
   const article = document.querySelector('article')
   const logOutBtn = document.querySelector('#logOut')
   const storePW = document.querySelector('#storePW')
   const wrongPW = document.querySelector('#wrongPW')
   const closeNewRowBtn = document.querySelector('#closeNewRow')
+  const openNewRowBtn = document.querySelector('#openNewRowBtn')
+  const sidebarCKB = document.querySelector('#sidebarCKB')
+
+
   var focusedCell; //focused cell in table
 
 
@@ -795,6 +912,7 @@ function getDatabases()
   article.addEventListener('click', deleteRow)
   logOutBtn.addEventListener('click', logOut)
   closeNewRowBtn.addEventListener('click', closeNewRow)
+  openNewRowBtn.addEventListener('click', openNewRow)
 
 
   function logOut() {
@@ -861,41 +979,12 @@ function getDatabases()
     document.querySelector('#newRow').style.display = 'none';
   }
 
-
-
-  /**
-   * 
-   * MAKE INPUT FIELDS EDITABLE
-   * 
-   */
-  function makeEditable(event) {
-    console.log('makeEditable', event)
-    if (event.target.tagName === 'TD' && event.target.className !== 'deleteRow') {
-      event.preventDefault()
-      event.target.setAttribute("contenteditable", true);
-      event.target.focus()
-      event.target.addEventListener('focusout', updateValue)
-      event.target.addEventListener('keypress', updateValueOnEnter)
-      focusedCell = event.target
-    }
-    // console.log(event.target)
-    console.log(focusedCell)
+  function openNewRow() {
+    document.querySelector('#newRow').style.display = 'block';
   }
 
-  /**
-   * 
-   * SET FOCUS ON CLICKED CELL
-   * 
-   */
-  function setFocusOnCell(event) {
-    console.log('setFocusOnCell', event)
-    if (event.target.tagName === 'TD' && event.target.className !== 'deleteRow') {
-      event.preventDefault()
-      event.target.focus()
-      // event.target.addEventListener('keypress', updateValueOnEnter)
-      focusedCell = event.target
-    }
-  }
+
+
 
 
   /**
@@ -944,18 +1033,23 @@ function getDatabases()
    * 
    */
   async function confirm(callback, text) {
-    document.getElementById('confirmBox').style.display = "block";
+    // document.getElementById('confirmBox').style.display = "block";
+    document.getElementById('confirmBox').classList.add('open')
     document.getElementById('confirmText').innerHTML = arguments[2]
     document.getElementById('confirmBox').addEventListener('click', async (el) => {
 
       // YES
       if (el.target.id === 'confirmTrue') {
         callback(arguments[1]);
-        document.getElementById('confirmBox').style.display = "none";
+        // document.getElementById('confirmBox').style.display = "none";
+        document.getElementById('confirmBox').classList.remove('open')
+
       }
       // NO
       else if (el.target.id === 'confirmFalse') {
-        document.getElementById('confirmBox').style.display = "none";
+        document.getElementById('confirmBox').classList.remove('open')
+
+        // document.getElementById('confirmBox').style.display = "none";
       }
 
     })
@@ -970,9 +1064,29 @@ function getDatabases()
    * 
    */
   function updateValueOnEnter(event) {
+    console.log("updateValueOnEnter", event.key)
+
     if (event.key === 'Enter') {
       event.preventDefault()
+      console.log('ENTER')
+      focusedCell.removeEventListener('focusout', updateValue, true)
+      focusedCell.removeEventListener('keydown', updateValueOnEnter, true)
+      focusedCell.setAttribute("contenteditable", false);
+      focusedCell.tabIndex = -1;
       updateValue(event)
+    }
+    // unset focusedCell
+    else if (event.key === 'Escape') {
+      // Esc
+      event.preventDefault()
+      console.log('ESC')
+      console.log(focusedCell.dataset.old)
+      focusedCell.innerHTML = focusedCell.dataset.old
+      focusedCell.setAttribute("data-old", '');
+      focusedCell.removeEventListener('focusout', updateValue, true)
+      focusedCell.removeEventListener('keydown', updateValueOnEnter, true)
+      focusedCell.setAttribute("contenteditable", false);
+      focusedCell.tabIndex = -1;
     }
 
   }
@@ -983,7 +1097,6 @@ function getDatabases()
    * 
    */
   function updateValue(event) {
-    event.target.classList.add('waiting')
     fetch('admin.php?updateValue', {
         method: 'POST',
         mode: "same-origin",
@@ -1003,22 +1116,17 @@ function getDatabases()
       })
       .then(response => response.json())
       .then(data => {
-        // console.log('data from updateValue', data)
         if (data.message == true) { // no type checking!!
-          event.target.classList.remove('waiting')
           event.target.classList.add('success')
           event.target.setAttribute("contenteditable", false);
-          event.target.blur()
         }
         // read error message
         else {
           console.error(data.message)
-          event.target.classList.remove('waiting')
           event.target.classList.add('error')
         }
       })
       .catch((error) => {
-        event.target.classList.remove('waiting')
         event.target.classList.add('error')
         console.error('Error:', error);
       });
@@ -1028,7 +1136,52 @@ function getDatabases()
   }
 
 
+  function saveNewRow(event) {
+    event.preventDefault()
+    let form = document.querySelector('form.saveNewRow')
+    // console.log(form)
+    let formData = new FormData(form);
+    const plainFormData = Object.fromEntries(formData.entries());
 
+    fetch(`admin.php?saveNewRow`, {
+        method: 'POST',
+        mode: "same-origin",
+        credentials: "same-origin",
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          password: DBobject.password,
+          database: DBobject.database,
+          table: DBobject.table,
+          data: plainFormData,
+        }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        // console.log(data)
+        if (data.message == true) {
+          refresh();
+          setTimeout(() => {
+            let scroll_to_bottom = document.querySelector('table.dataTable');
+            console.log(scroll_to_bottom)
+            scroll_to_bottom.scrollIntoView({
+              behavior: 'smooth',
+              block: 'end'
+            });
+            // scroll_to_bottom.scroll({ top: 2000, behavior: "smooth"})
+            // scroll_to_bottom.scrollTop = scroll_to_bottom.scrollHeight;
+            console.log(scroll_to_bottom.scrollHeight)
+            console.log(scroll_to_bottom.scrollTop)
+
+          }, 500);
+        }
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+  }
 
 
 
@@ -1065,6 +1218,7 @@ function getDatabases()
         document.querySelector('.showTable').innerHTML = DBobject.table
         store('DBETA', DBobject.table)
         DBobject.data.rows = data.data.rows
+        sidebarCKB.checked = false
         refresh();
       })
       .catch((error) => {
@@ -1216,15 +1370,48 @@ function getDatabases()
   }
 
 
+  /**
+   * 
+   * MAKE INPUT FIELDS EDITABLE
+   * 
+   */
+  function makeEditable(event) {
+    // console.log('makeEditable', event)
+    if (event.target.tagName === 'TD' && event.target.className !== 'deleteRow') {
+      event.preventDefault()
+      focusedCell = event.target
+      focusedCell.setAttribute("contenteditable", true);
+      focusedCell.setAttribute("data-old", focusedCell.innerHTML);
+      focusedCell.focus()
+      focusedCell.addEventListener('focusout', updateValue, true)
+      focusedCell.addEventListener('keydown', updateValueOnEnter, true)
+    }
+  }
+
+  /**
+   * 
+   * SET FOCUS ON CLICKED CELL
+   * 
+   */
+  function setFocusOnCell(event) {
+    // console.log('setFocusOnCell', event.target)
+    if (event.target.tagName === 'TD' && event.target.className !== 'deleteRow') {
+      event.preventDefault()
+      focusedCell = event.target
+      focusedCell.tabIndex = 3;
+      focusedCell.focus();
+    }
+  }
+
+
+
 
   function keyOnTableStyling(sibling) {
     if (sibling != null) {
       focusedCell.focus();
-      focusedCell.style.backgroundColor = '';
-      focusedCell.style.color = '';
+      focusedCell.tabIndex = -1;
       sibling.focus();
-      sibling.style.backgroundColor = 'green';
-      sibling.style.color = 'white';
+      sibling.tabIndex = 3;
       focusedCell = sibling;
     }
   }
@@ -1232,35 +1419,39 @@ function getDatabases()
 
   function keyOnTable(e) {
     e = e || window.event;
-    console.log(e.keyCode)
-    if (e.keyCode == '38') {
-      // up arrow
-      var idx = focusedCell.cellIndex;
-      var nextrow = focusedCell.parentElement.previousElementSibling;
-      if (nextrow != null) {
-        var sibling = nextrow.cells[idx];
+    // console.log('keyOnTable e.keyCode', e.keyCode)
+    if (e.target.contentEditable !== 'true') {
+      if (e.keyCode == '38') {
+        // up arrow
+        var idx = focusedCell.cellIndex;
+        var nextrow = focusedCell.parentElement.previousElementSibling;
+        if (nextrow != null) {
+          var sibling = nextrow.cells[idx];
+          keyOnTableStyling(sibling);
+        }
+      } else if (e.keyCode == '40') {
+        // down arrow
+        var idx = focusedCell.cellIndex;
+        var nextrow = focusedCell.parentElement.nextElementSibling;
+        if (nextrow != null) {
+          var sibling = nextrow.cells[idx];
+          keyOnTableStyling(sibling);
+        }
+      } else if (e.keyCode == '37') {
+        // left arrow
+        var sibling = focusedCell.previousElementSibling;
         keyOnTableStyling(sibling);
-      }
-    } else if (e.keyCode == '40') {
-      // down arrow
-      var idx = focusedCell.cellIndex;
-      var nextrow = focusedCell.parentElement.nextElementSibling;
-      if (nextrow != null) {
-        var sibling = nextrow.cells[idx];
+      } else if (e.keyCode == '39') {
+        // right arrow
+        var sibling = focusedCell.nextElementSibling;
         keyOnTableStyling(sibling);
+      } else if (e.keyCode == '32') {
+        // space
+        makeEditable(e)
       }
-    } else if (e.keyCode == '37') {
-      // left arrow
-      var sibling = focusedCell.previousElementSibling;
-      keyOnTableStyling(sibling);
-    } else if (e.keyCode == '39') {
-      // right arrow
-      var sibling = focusedCell.nextElementSibling;
-      keyOnTableStyling(sibling);
-    } else if (e.keyCode == '32') {
-      // space
-      makeEditable(e)
+      e.preventDefault()
     }
+
   }
 
 
@@ -1287,11 +1478,18 @@ function getDatabases()
     makeTableBody(data);
     makeSort(data);
 
-    table.onkeydown = keyOnTable;
+    tableContent.onkeydown = keyOnTable;
 
 
 
+    /**
+     * 
+     * MAKE NEF ROW DIALOG
+     * 
+     */
     function makeNewRow(data) {
+      document.querySelector('#newRow form').innerHTML = '';
+
       const objKeys = Object.keys(data[0]);
       objKeys.map((key) => {
         if (key !== 'id') {
@@ -1316,6 +1514,9 @@ function getDatabases()
       submit.setAttribute("type", 'submit');
       submit.setAttribute("value", 'save');
 
+      // submit.setAttribute("onclick", 'saveNewRow(this)');
+
+
       document.querySelector('#newRow form').appendChild(submit);
     };
 
@@ -1325,7 +1526,7 @@ function getDatabases()
 
       const cell = document.createElement("th");
       cell.classList.add('deleteRow');
-      cell.innerHTML = 'x';
+      cell.innerHTML = '';
       row.appendChild(cell);
 
 
