@@ -8,10 +8,6 @@ $dbFolder = "assets";
 $dbExtension = 'sqlite';
 
 $request = json_decode(trim(file_get_contents("php://input")), true);
-// $content = '';
-// $tableList = '';
-// $databaseList = '';
-
 
 
 $response = [
@@ -25,74 +21,92 @@ $response = [
     'value' => '',
   ]
 ];
-// pprint($_GET);
-// pprint($password);
 
-// pprint($request['password']);
+/////////////// ROUTES ////////////////
+/////////////// ROUTES ////////////////
+/////////////// ROUTES ////////////////
 
-// if (!empty($_GET) && $password !== isset($request['password'])  || !isset($_GET['login'])) {
+
 if (!isset($request['password'])) {
-    if (!empty($_GET)) {
-        $response = [
-          'request' => $request,
-          'message' => 'no password',
-        ];
-        echo json_encode($response);
-        exit;
-    }
+  if (!empty($_GET)) {
+    $response = [
+      'request' => $request,
+      'message' => 'no password',
+    ];
+    echo json_encode($response);
+    exit;
+  }
 }
 
 if (isset($_GET['login'])) {
-    $response = [
-      'API' => true,
-      'data' => [
-        'databases' => login(),
-      ],
-    ];
+  $response = [
+    'API' => true,
+    'data' => [
+      'databases' => login(),
+    ],
+  ];
 }
 
 if (isset($_GET['getTables'])) {
-    $response = [
-      'API' => true,
-      'data' => [
-        'tables' => getTables(),
-      ],
-    ];
+  $response = [
+    'API' => true,
+    'data' => [
+      'tables' => getTables(),
+    ],
+  ];
 }
 
 
 if (isset($_GET['getRows'])) {
-    $response = [
-      'API' => true,
-      'data' => [
-        'rows' => getRows(),
-      ],
-    ];
+  $response = [
+    'API' => true,
+    'data' => [
+      'rows' => getRows(),
+    ],
+  ];
 }
 
 if (isset($_GET['updateValue'])) {
-    $response = [
-      'API' => true,
-      'message' => updateValue(),
-    ];
+  $response = [
+    'API' => true,
+    'message' => updateValue(),
+  ];
 }
 
 
 
 if (isset($_GET['deleteRow'])) {
-    $response = [
-      'API' => true,
-      'message' => deleteRow(),
-    ];
+  $response = [
+    'API' => true,
+    'message' => deleteRow(),
+  ];
 }
 
 
 if (isset($_GET['saveNewRow'])) {
-    // pprint($request);
-    $response = [
-        'API' => true,
-        'message' => saveNewRow(),
-      ];
+  // pprint($request);
+  $response = [
+    'API' => true,
+    'message' => saveNewRow(),
+  ];
+}
+
+
+if (isset($_GET['saveNewDatabase'])) {
+  // pprint($request);
+  $response = [
+    'API' => true,
+    'message' => saveNewDatabase(),
+  ];
+}
+
+
+if (isset($_GET['getTableInfo'])) {
+  // pprint($request);
+  $response = [
+    'API' => true,
+    'message' => getTableInfo(),
+  ];
 }
 
 
@@ -106,9 +120,9 @@ if (isset($_GET['saveNewRow'])) {
 // pprint($response, 'response');
 // exit;
 if ($response['API'] === true) {
-    unset($response['API']);
-    echo json_encode($response);
-    exit;
+  unset($response['API']);
+  echo json_encode($response);
+  exit;
 }
 
 
@@ -124,75 +138,106 @@ if ($response['API'] === true) {
 
 
 
-function saveNewRow()
-{
-    global $request, $dbFolder, $response;
-    // pprint($request);
-    $database = $request['database'];
-    $table = $request['table'];
-    $data = $request['data'];
+function getTableInfo() {
+  global $request, $dbFolder;
+  // pprint($request);
+  $database = $request['database'];
+  $table = $request['table'];
+  $db = new SQLite3($dbFolder . "/" . $database);
 
-    if (isset($data['date']) && $data['date'] === '') {
-        $data['date'] = date("Y-m-d H:i:s");
-    }
+  $stmt = $db->prepare("PRAGMA table_info($table);");
+  $result = $stmt->execute();
 
-    $db = new SQLite3($dbFolder . "/" . $database);
+  $array = array();
+  while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+    $array[] = $row;
+  }
 
-    // make strings from array
-    $columns = '(' . implode(',', array_keys($data)) . ')';
-    $values = "('" . implode("','", $data) . "')";
-    // pprint("INSERT INTO $table" . $columns . " VALUES" . $values);
+  if ($array) {
+    return $array;
+  } else {
+    return 'database error';
+  }
+}
 
-    // insert into DB
-    $stmt = $db->prepare("INSERT INTO $table" . $columns . " VALUES" . $values);
+function saveNewDatabase() {
+  global $request, $dbFolder;
+  // pprint($request); 
+  $database = $request['data'];
+  if (!is_file($dbFolder . "/" . $database . ".sqlite")) {
+    $db = new SQLite3($dbFolder . "/" . $database . ".sqlite");
+    return true;
+  } else {
+    return 'file exists';
+  }
+}
 
-    $result = $stmt->execute();
-    if ($result) {
-        return true;
-    } else {
-        return 'database error';
-    }
+
+function saveNewRow() {
+  global $request, $dbFolder;
+  // pprint($request);
+  $database = $request['database'];
+  $table = $request['table'];
+  $data = $request['data'];
+
+  if (isset($data['date']) && $data['date'] === '') {
+    $data['date'] = date("Y-m-d H:i:s");
+  }
+
+  $db = new SQLite3($dbFolder . "/" . $database);
+
+  // make strings from array
+  $columns = '(' . implode(',', array_keys($data)) . ')';
+  $values = "('" . implode("','", $data) . "')";
+  // pprint("INSERT INTO $table" . $columns . " VALUES" . $values);
+
+  // insert into DB
+  $stmt = $db->prepare("INSERT INTO $table" . $columns . " VALUES" . $values);
+
+  $result = $stmt->execute();
+  if ($result) {
+    return true;
+  } else {
+    return 'database error';
+  }
+}
+
+
+function deleteRow() {
+  global $request, $dbFolder;
+  // pprint($request);
+  $database = $request['database'];
+  $table = $request['table'];
+  $row = $request['row'];
+  $db = new SQLite3($dbFolder . "/" . $database);
+  $stmt = $db->prepare("DELETE FROM $table WHERE id=$row  ");
+  $result = $stmt->execute();
+  if ($result) {
+    return true;
+  } else {
+    return 'database error';
+  }
 }
 
 
 
-function deleteRow()
-{
-    global $request, $dbFolder, $response;
-    // pprint($request);
-    $database = $request['database'];
-    $table = $request['table'];
-    $row = $request['row'];
-    $db = new SQLite3($dbFolder . "/" . $database);
-    $stmt = $db->prepare("DELETE FROM $table WHERE id=$row  ");
-    $result = $stmt->execute();
-    if ($result) {
-        return true;
-    } else {
-        return 'database error';
-    }
-}
+function updateValue() {
+  global $request, $dbFolder;
+  // pprint($request);
+  $database = $request['database'];
+  $table = $request['table'];
+  $id = $request['id'];
+  $row = $request['row'];
+  $value = $request['value'];
 
-
-
-function updateValue()
-{
-    global $request, $dbFolder, $response;
-    // pprint($request);
-    $database = $request['database'];
-    $table = $request['table'];
-    $id = $request['id'];
-    $row = $request['row'];
-    $value = $request['value'];
-
-    $db = new SQLite3($dbFolder . "/" . $database);
-    $stmt = $db->prepare("UPDATE $table SET $row='$value' WHERE id=$id  ");
-    $result = $stmt->execute();
-    if ($result) {
-        return true;
-    } else {
-        return 'database error';
-    }
+  $db = new SQLite3($dbFolder . "/" . $database);
+  $stmt = $db->prepare("UPDATE $table SET $row='$value' WHERE id=$id  ");
+  $result = $stmt->execute();
+  if ($result) {
+    return true;
+  } else {
+    return 'database error';
+  }
 }
 
 /**
@@ -200,16 +245,15 @@ function updateValue()
  * LOGIN
  *
  */
-function login()
-{
-    global $request, $password;
-    if (isset($_GET['login'])) {
-        if ($password !== $request['password']) {
-            return false;
-        } else {
-            return getDatabases();
-        }
+function login() {
+  global $request, $password;
+  if (isset($_GET['login'])) {
+    if ($password !== $request['password']) {
+      return false;
+    } else {
+      return getDatabases();
     }
+  }
 }
 
 
@@ -221,59 +265,56 @@ function login()
  * TABLE CONTENT
  *
  */
-function getRows()
-{
-    global $request, $dbFolder, $response;
-    // pprint($request);
-    $database = $request['database'];
-    $table = $request['table'];
+function getRows() {
+  global $request, $dbFolder, $response;
+  // pprint($request);
+  $database = $request['database'];
+  $table = $request['table'];
 
-    $db = new SQLite3($dbFolder . "/" . $database);
-    $stmt = $db->prepare("SELECT * FROM $table");
-    $results = $stmt->execute();
-    $array = array();
-    while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
-        $array[] = $row;
-    }
-    return $array;
+  $db = new SQLite3($dbFolder . "/" . $database);
+  $stmt = $db->prepare("SELECT * FROM $table");
+  $results = $stmt->execute();
+  $array = array();
+  while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
+    $array[] = $row;
+  }
+  return $array;
 }
 
 
-function getTables()
-{
-    global $request, $dbFolder;
-    // pprint($request);
-    $database = $request['database'];
-    $db = new SQLite3($dbFolder . "/" . $database);
+function getTables() {
+  global $request, $dbFolder;
+  // pprint($request);
+  $database = $request['database'];
+  $db = new SQLite3($dbFolder . "/" . $database);
 
-    $stmt = $db->prepare("SELECT * FROM sqlite_master WHERE type='table';");
-    $results = $stmt->execute();
-    $array = array();
-    while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
-        $array[] = [
-          'name' => $row['name'],
-          'database' => $database
-        ];
-    }
-    return $array;
+  $stmt = $db->prepare("SELECT * FROM sqlite_master WHERE type='table';");
+  $results = $stmt->execute();
+  $array = array();
+  while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
+    $array[] = [
+      'name' => $row['name'],
+      'database' => $database
+    ];
+  }
+  return $array;
 }
 
 
 
-function getDatabases()
-{
-    global $dbFolder, $dbExtension;
-    $files = glob($dbFolder . "/*." . $dbExtension);
-    $array = array();
-    foreach ($files as $file) {
-        $file = str_replace($dbFolder . '/', '', $file);
-        $name = str_replace('.' . $dbExtension, '', $file);
-        $array[] = [
-          'name' => $name,
-          'file' => $file
-        ];
-    }
-    return $array;
+function getDatabases() {
+  global $dbFolder, $dbExtension;
+  $files = glob($dbFolder . "/*." . $dbExtension);
+  $array = array();
+  foreach ($files as $file) {
+    $file = str_replace($dbFolder . '/', '', $file);
+    $name = str_replace('.' . $dbExtension, '', $file);
+    $array[] = [
+      'name' => $name,
+      'file' => $file
+    ];
+  }
+  return $array;
 }
 
 
@@ -307,467 +348,518 @@ function getDatabases()
 -->
 
   <style>
-  :root {
-    --header-height: 50px;
-    --footer-height: 30px;
-    --main-height: calc(100vh - var(--header-height) - var(--footer-height));
-    --sidebar-width: 150px;
-    --bg-main: #1b1b1b;
-    --bg-header: #212121;
-    --bg-footer: #212121;
-    --bg-sidebar: rgb(52, 52, 52);
-    --blue: rgb(82, 139, 255);
-    --yellow: rgb(209, 154, 102);
-    --green: rgb(152, 195, 121);
-    --red: rgb(190, 80, 70);
-    --text-color: rgb(205, 205, 205);
-    --link-color: var(--blue);
-    /* --link-color: rgb(140, 180, 255); */
-    --link-hover-color: rgb(94, 158, 255);
-    --border-color: #858585;
+    :root {
+      --header-height: 50px;
+      --footer-height: 30px;
+      --main-height: calc(100vh - var(--header-height) - var(--footer-height));
+      --sidebar-width: 200px;
+      --bg-main: #1b1b1b;
+      --bg-header: #212121;
+      --bg-footer: #212121;
+      --bg-sidebar: rgb(52, 52, 52);
+      --blue: rgb(82, 139, 255);
+      --yellow: rgb(209, 154, 102);
+      --green: rgb(152, 195, 121);
+      --red: rgb(190, 80, 70);
+      --text-color: rgb(205, 205, 205);
+      --link-color: var(--blue);
+      /* --link-color: rgb(140, 180, 255); */
+      --link-hover-color: rgb(94, 158, 255);
+      --border-color: #858585;
 
-    --icon-checkbox: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(255, 255, 255)' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
-    --icon-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(162, 175, 185)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-    --icon-chevron-button: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(255, 255, 255)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-    --icon-chevron-button-inverse: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(0, 0, 0)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-    --icon-close: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(115, 130, 140)' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='6' x2='6' y2='18'%3E%3C/line%3E%3Cline x1='6' y1='6' x2='18' y2='18'%3E%3C/line%3E%3C/svg%3E");
-    --icon-date: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(162, 175, 185)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E");
-    --icon-invalid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(183, 28, 28)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cline x1='12' y1='8' x2='12' y2='12'%3E%3C/line%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'%3E%3C/line%3E%3C/svg%3E");
-    --icon-minus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(255, 255, 255)' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='5' y1='12' x2='19' y2='12'%3E%3C/line%3E%3C/svg%3E");
-    --icon-search: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(162, 175, 185)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
-    --icon-time: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(162, 175, 185)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cpolyline points='12 6 12 12 16 14'%3E%3C/polyline%3E%3C/svg%3E");
-    --icon-valid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(46, 125, 50)' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
-  }
+      --icon-checkbox: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(255, 255, 255)' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+      --icon-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(162, 175, 185)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      --icon-chevron-button: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(255, 255, 255)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      --icon-chevron-button-inverse: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(0, 0, 0)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      --icon-close: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(115, 130, 140)' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='6' x2='6' y2='18'%3E%3C/line%3E%3Cline x1='6' y1='6' x2='18' y2='18'%3E%3C/line%3E%3C/svg%3E");
+      --icon-date: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(162, 175, 185)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E");
+      --icon-invalid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(183, 28, 28)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cline x1='12' y1='8' x2='12' y2='12'%3E%3C/line%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'%3E%3C/line%3E%3C/svg%3E");
+      --icon-minus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(255, 255, 255)' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='5' y1='12' x2='19' y2='12'%3E%3C/line%3E%3C/svg%3E");
+      --icon-search: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(162, 175, 185)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
+      --icon-time: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(162, 175, 185)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cpolyline points='12 6 12 12 16 14'%3E%3C/polyline%3E%3C/svg%3E");
+      --icon-valid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(46, 125, 50)' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+    }
 
 
-  /* scrollbar */
+    /* scrollbar */
 
-  ::-webkit-scrollbar {
-    display: none;
-  }
+    ::-webkit-scrollbar {
+      display: none;
+    }
 
-  * {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-    box-sizing: border-box;
-    transition: all .5s;
-  }
+    * {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+      box-sizing: border-box;
+      transition: all .5s;
+    }
 
-  html {
-    font-size: 16px;
-    line-height: 1.5rem;
-  }
+    html {
+      font-size: 16px;
+      line-height: 1.5rem;
+    }
 
-  body {
-    margin: 0;
-    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    color: var(--text-color);
-    background-color: var(--bg-main);
-  }
+    body {
+      margin: 0;
+      font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      color: var(--text-color);
+      background-color: var(--bg-main);
+    }
 
-  header {
-    flex-shrink: 0;
-    height: var(--header-height);
-    background-color: var(--bg-header);
-    padding-inline: 1rem;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
+    header {
+      flex-shrink: 0;
+      height: var(--header-height);
+      background-color: var(--bg-header);
+      padding-inline: 1rem;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-  header .menuIcon {
-    display: inline-flex;
-    height: 24px;
-  }
+    header .menuIcon {
+      display: inline-flex;
+      height: 24px;
+    }
 
-  header .menuIcon svg {
-    fill: var(--text-color);
-    cursor: pointer;
-    width: 24px;
-    height: 24px;
-    margin-left: 1rem;
-  }
+    header .menuIcon svg {
+      fill: var(--text-color);
+      cursor: pointer;
+      width: 24px;
+      height: 24px;
+      margin-left: 1rem;
+    }
 
-  header .menuIcon svg:hover {
-    fill: var(--blue);
-  }
+    header .menuIcon svg:hover {
+      fill: var(--blue);
+    }
 
-  header .breadcrumb {
-    min-width: max-content;
-    align-self: end;
-    margin-bottom: 3px;
-  }
+    header .breadcrumb {
+      min-width: max-content;
+      align-self: end;
+      margin-bottom: 3px;
+    }
 
-  header .showDatabase {
-    color: var(--blue);
-  }
+    header .showDatabase {
+      color: var(--blue);
+    }
 
-  header .showTable {
-    color: var(--green);
-    padding-left: 1rem;
-  }
+    header .showTable {
+      color: var(--green);
+      padding-left: 1rem;
+    }
 
-  #openNewRowBtn {
-    color: var(--yellow);
-    padding-top: 1rem;
-    cursor: pointer;
-  }
+    header .showInfo {
+      color: var(--text-color);
+    }
 
-  #openNewTableBtn {
-    color: var(--yellow);
-    padding-top: 1rem;
-    cursor: pointer;
-  }
 
-  footer {
-    flex-shrink: 0;
-    height: var(--footer-height);
-    outline: 1px solid var(--border-color);
-    background-color: var(--bg-footer);
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
 
-  main {
-    flex-grow: 1;
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    outline: 1px solid var(--border-color);
-  }
 
-  main nav {
-    flex-shrink: 0;
-    width: var(--sidebar-width);
-    height: calc(var(--main-height) - 1px);
-    border-right: 1px solid var(--border-color);
-    background-color: var(--bg-sidebar);
-    z-index: 10;
-  }
 
-  main nav>div {
-    padding: .5rem;
-  }
+    footer {
+      flex-shrink: 0;
+      height: var(--footer-height);
+      outline: 1px solid var(--border-color);
+      background-color: var(--bg-footer);
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-  main article {
-    flex-grow: 1;
-    position: relative;
-  }
-
-  #toggleSidebar {
-    display: none;
-  }
-
-  @media only screen and (max-width: 800px) {
-    #toggleSidebar {
-      display: block;
+    main {
+      flex-grow: 1;
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      outline: 1px solid var(--border-color);
     }
 
     main nav {
-      overflow: hidden;
-      position: absolute;
-      width: 0;
-      transform: translateX(calc(var(--sidebar-width) * -1));
-    }
-
-    #sidebarCKB:checked~nav {
+      flex-shrink: 0;
       width: var(--sidebar-width);
-      transform: translateX(0);
-      position: absolute;
       height: calc(var(--main-height) - 1px);
-      transition: transform 1s;
+      border-right: 1px solid var(--border-color);
+      background-color: var(--bg-sidebar);
+      z-index: 10;
     }
-  }
 
-  a {
-    text-decoration: none;
-    color: var(--link-color);
-  }
+    main nav>div {
+      padding: .5rem;
+    }
 
-  a:hover {
-    /* color: var(--link-hover-color); */
-    filter: brightness(1.25);
-  }
+    main article {
+      flex-grow: 1;
+      position: relative;
+    }
+
+    #toggleSidebar {
+      display: none;
+    }
+
+    @media only screen and (max-width: 800px) {
+      #toggleSidebar {
+        display: block;
+      }
+
+      main nav {
+        overflow: hidden;
+        position: absolute;
+        width: 0;
+        transform: translateX(calc(var(--sidebar-width) * -1));
+      }
+
+      #sidebarCKB:checked~nav {
+        width: var(--sidebar-width);
+        transform: translateX(0);
+        position: absolute;
+        height: calc(var(--main-height) - 1px);
+        transition: transform 1s;
+      }
+    }
+
+    a {
+      text-decoration: none;
+      color: var(--link-color);
+    }
+
+    a:hover {
+      /* color: var(--link-hover-color); */
+      filter: brightness(1.25);
+    }
+
+    details>summary {
+      list-style: none;
+    }
+
+    details>summary::-webkit-details-marker {
+      display: none;
+    }
+
+    nav ul {
+      padding-left: 0;
+    }
+
+    li {
+      list-style-type: none;
+    }
+
+    input {
+      font-size: 1rem;
+      color: var(--text-color);
+      background-color: transparent;
+      border: 1px solid var(--border-color);
+      border-radius: .3rem;
+      padding: .2rem;
+    }
+
+    main .centered {
+      width: max-content;
+      margin-inline: auto;
+      margin-top: 3rem;
+    }
+
+    form.login {
+      width: 150px;
+    }
+
+    form.login input:not([type="checkbox"]) {
+      display: block;
+      margin-top: .5rem;
+      width: 100px;
+    }
+
+    form.login label {
+      display: block;
+      margin-top: .5rem;
+      margin-bottom: .5rem;
+    }
+
+    form #wrongPW {
+      color: var(--red);
+    }
+
+    /* LISTS IN NAV */
+
+    .newList,
+    .dbList,
+    .tableList {
+      display: none;
+    }
+
+    .newList h3,
+    .dbList h3,
+    .tableList h3 {
+      display: inline;
+      cursor: pointer;
+    }
+
+    .dbList a {
+      color: var(--blue);
+    }
+
+    .tableList a {
+      color: var(--green);
+    }
+
+    nav .iInfo svg {
+      width: 15px;
+      height: 15px;
+      fill: var(--text-color);
+    }
 
 
+    nav .iInfo svg:hover {
+      fill: var(--yellow);
+    }
 
-  nav ul {
-    padding-left: 0;
-  }
+    nav .iInfo svg:active {
+      fill: var(--red);
+      pointer-events: none;
+    }
 
-  li {
-    list-style-type: none;
-  }
+    .itemList {
+      max-height: 300px;
+      overflow-y: scroll;
+      display: flex;
+      flex-direction: column;
+    }
 
-  input {
-    font-size: 1rem;
-    color: var(--text-color);
-    background-color: transparent;
-    border: 1px solid var(--border-color);
-    border-radius: .3rem;
-    padding: .2rem;
-  }
+    .itemList span {
+      color: var(--yellow);
+      cursor: pointer;
+    }
 
-  main .centered {
-    width: max-content;
-    margin-inline: auto;
-    margin-top: 3rem;
-  }
-
-  form.login {
-    width: 150px;
-  }
-
-  form.login input:not([type="checkbox"]) {
-    display: block;
-    margin-top: .5rem;
-    width: 100px;
-  }
-
-  form.login label {
-    display: block;
-    margin-top: .5rem;
-    margin-bottom: .5rem;
-  }
-
-  form #wrongPW {
-    color: var(--red);
-  }
-
-  .dbList,
-  .tableList {
-    display: none;
-  }
-
-  .dbList a {
-    color: var(--blue);
-  }
-
-
-  .tableList a {
-    color: var(--green);
-  }
-
-  .itemList {
-    max-height: 300px;
-    overflow-y: scroll;
-  }
-
-  /*   TABLE */
-  .dataTable {
-    border-collapse: collapse;
-    width: 100%;
-    overflow: scroll;
-    display: block;
-    scrollbar-width: thin;
-    width: calc(100vw - var(--sidebar-width) - 1px);
-  }
-
-  @media only screen and (max-width: 800px) {
+    /* TABLE */
     .dataTable {
-      width: 100vw;
+      border-collapse: collapse;
+      width: 100%;
+      overflow: scroll;
+      display: block;
+      scrollbar-width: thin;
+      width: calc(100vw - var(--sidebar-width) - 1px);
     }
-  }
 
-  .dataTable thead td {
-    cursor: pointer;
-  }
+    @media only screen and (max-width: 800px) {
+      .dataTable {
+        width: 100vw;
+      }
+    }
 
-  .dataTable thead,
-  .dataTable tbody {
-    display: block;
-  }
+    .dataTable thead td {
+      cursor: pointer;
+    }
 
-  .dataTable tbody {
-    height: calc(var(--main-height) - 50px);
-    width: max-content;
-    overflow-y: scroll;
-    overflow-x: visible;
-  }
+    .dataTable thead,
+    .dataTable tbody {
+      display: block;
+    }
 
-
-  .dataTable tbody tr:nth-of-type(even) {
-    backdrop-filter: brightness(0.8)
-  }
-
-  .dataTable tbody tr:hover {
-    background-color: var(--bg-sidebar);
-    backdrop-filter: brightness(0.8)
-  }
-
-  .dataTable th {
-    text-align: left;
-    padding: .5rem;
-    min-width: 200px;
-    white-space: nowrap;
-  }
-
-  .dataTable td {
-    padding-inline: .5rem;
-    min-width: 200px;
-    white-space: nowrap;
-    outline: 1px solid transparent;
-    border-radius: .25rem;
-  }
-
-  td:focus {
-    outline: 1px solid var(--text-color);
-  }
-
-  td.focus {
-    outline: 1px solid var(--yellow);
-  }
-
-  td[contenteditable="true"] {
-    outline: 1px solid var(--blue);
-  }
-
-  td[contenteditable].success {
-    outline: 1px solid var(--green);
-  }
-
-  td[contenteditable].error {
-    outline: 1px solid var(--red);
-  }
-
-  .dataTable th.deleteRow,
-  .dataTable td.deleteRow {
-    cursor: pointer;
-    min-width: 20px;
-    max-width: 20px;
-    color: var(--yellow);
-  }
+    .dataTable tbody {
+      height: calc(var(--main-height) - 50px);
+      width: max-content;
+      overflow-y: scroll;
+      overflow-x: visible;
+    }
 
 
-  .dataTable td.deleteRow:hover {
-    color: var(--red);
-  }
+    .dataTable tbody tr:nth-of-type(even) {
+      backdrop-filter: brightness(0.8)
+    }
+
+    .dataTable tbody tr:hover {
+      background-color: var(--bg-sidebar);
+      backdrop-filter: brightness(0.8)
+    }
+
+    .dataTable th {
+      text-align: left;
+      padding: .5rem;
+      min-width: 200px;
+      white-space: nowrap;
+    }
+
+    .dataTable td {
+      padding-inline: .5rem;
+      min-width: 200px;
+      white-space: nowrap;
+      outline: 1px solid transparent;
+      border-radius: .25rem;
+    }
+
+    td:focus {
+      outline: 1px solid var(--text-color);
+    }
+
+    td.focus {
+      outline: 1px solid var(--yellow);
+    }
+
+    td[contenteditable="true"] {
+      outline: 1px solid var(--blue);
+    }
+
+    td[contenteditable].success {
+      outline: 1px solid var(--green);
+    }
+
+    td[contenteditable].error {
+      outline: 1px solid var(--red);
+    }
+
+    .dataTable th.deleteRow,
+    .dataTable td.deleteRow {
+      cursor: pointer;
+      min-width: 20px;
+      max-width: 20px;
+      color: var(--yellow);
+    }
 
 
-  .dataTable th.id,
-  .dataTable td.id {
-    min-width: 50px;
-    max-width: 50px;
-  }
-
-  .dataTable th.date,
-  .dataTable td.date {
-    min-width: 250px;
-    max-width: 250px;
-  }
-
-  #newRow {
-    display: none;
-    position: absolute;
-    top: 20px;
-    left: 300px;
-    z-index: 100;
-    width: 300px;
-    background-color: var(--bg-sidebar);
-    border-radius: 5px;
-    border: 1px solid var(--border-color);
-    padding: 1rem;
-  }
-
-  #newRow h3 {
-    position: relative;
-    margin: .5rem;
-    margin-top: 0;
-    text-align: center;
-    color: var(--yellow);
-  }
-
-  #newRow h3 #closeNewRow {
-    background-image: var(--icon-close);
-    content: ' ';
-    width: 20px;
-    height: 20px;
-    color: var(--text-color);
-    cursor: pointer;
-    position: absolute;
-    top: -.6rem;
-    right: -.5rem;
-  }
-
-  #newRow h3 #closeNewRow:hover {
-    color: var(--red);
-  }
-
-  #newRow form {
-    display: flex;
-    flex-direction: column;
-  }
+    .dataTable td.deleteRow:hover {
+      color: var(--red);
+    }
 
 
-  #newRow form input {
-    width: 100%;
-    margin-bottom: 1rem;
-  }
+    .dataTable th.id,
+    .dataTable td.id {
+      min-width: 50px;
+      max-width: 50px;
+    }
 
-  #newRow form input[type=submit] {
-    cursor: pointer;
-    margin-top: 1rem;
-    margin-bottom: .5rem;
-    color: var(--bg-header);
-    background-color: var(--text-color);
-    border: 1px solid var(--border-color);
+    .dataTable th.date,
+    .dataTable td.date {
+      min-width: 250px;
+      max-width: 250px;
+    }
 
-  }
+    #newDatabase,
+    #newRow {
+      position: absolute;
+      top: 20px;
+      left: calc(50% - 100px);
+      z-index: 100;
+      width: 300px;
+      background-color: var(--bg-sidebar);
+      border-radius: 5px;
+      border: 1px solid var(--border-color);
+      padding: 1rem;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 500ms ease;
+      top: -10vh;
+    }
 
-  #newRow form input[type=submit]:hover {
-    background-color: #ddd;
+    #newDatabase.open,
+    #newRow.open {
+      opacity: 1;
+      visibility: visible;
+      top: var(--header-height);
+    }
 
-  }
+    #newDatabase h3,
+    #newRow h3 {
+      position: relative;
+      margin: .5rem;
+      margin-top: 0;
+      text-align: center;
+      color: var(--yellow);
+    }
 
-  #confirmBox {
-    color: var(--yellow);
-    background-color: var(--bg-sidebar);
-    border-radius: 5px;
-    border: 1px solid var(--border-color);
-    max-width: 300px;
-    position: fixed;
-    left: 50%;
-    margin-left: -150px;
-    margin-top: 10vh;
-    padding: .5rem;
-    box-sizing: border-box;
-    text-align: center;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 500ms ease;
-    /* transition: all 500ms cubic-bezier(0.335, 0.010, 0.030, 1.360); */
-    top: -10vh;
-  }
+    #newDatabase h3 #closeNewDatabaseBtn,
+    #newRow h3 #closeNewRowBtn {
+      background-image: var(--icon-close);
+      content: ' ';
+      width: 20px;
+      height: 20px;
+      color: var(--text-color);
+      cursor: pointer;
+      position: absolute;
+      top: -.6rem;
+      right: -.5rem;
+    }
 
-  #confirmBox.open {
+    #newDatabase h3 #closeNewDatabaseBtn:hover,
+    #newRow h3 #closeNewRowBtn:hover {
+      color: var(--red);
+    }
 
-    opacity: 1;
-    visibility: visible;
-    top: 0;
+    #newDatabase form,
+    #newRow form {
+      display: flex;
+      flex-direction: column;
+    }
 
-  }
+    #newDatabase form input,
+    #newRow form input {
+      width: 100%;
+      margin-bottom: 1rem;
+    }
 
-  #confirmBox button {
-    background-color: var(--text-color);
-    display: inline-block;
-    border-radius: 3px;
-    border: 1px solid var(--bg-header);
-    padding: 2px;
-    margin-inline: .5rem;
-    text-align: center;
-    width: 80px;
-    cursor: pointer;
-  }
+    #newDatabase form input[type=submit],
+    #newRow form input[type=submit] {
+      cursor: pointer;
+      margin-top: 1rem;
+      margin-bottom: .5rem;
+      color: var(--bg-header);
+      background-color: var(--text-color);
+      border: 1px solid var(--border-color);
 
-  #confirmBox button:hover {
-    background-color: #ddd;
-  }
+    }
+
+    #newDatabase form input[type=submit]:hover,
+
+    #newRow form input[type=submit]:hover {
+      background-color: #ddd;
+    }
+
+    #confirmBox {
+      color: var(--yellow);
+      background-color: var(--bg-sidebar);
+      border-radius: 5px;
+      border: 1px solid var(--border-color);
+      max-width: 300px;
+      position: fixed;
+      left: 50%;
+      margin-left: -150px;
+      margin-top: 10vh;
+      padding: .5rem;
+      box-sizing: border-box;
+      text-align: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 500ms ease;
+      /* transition: all 500ms cubic-bezier(0.335, 0.010, 0.030, 1.360); */
+      top: -10vh;
+    }
+
+    #confirmBox.open {
+
+      opacity: 1;
+      visibility: visible;
+      top: 0;
+
+    }
+
+    #confirmBox button {
+      background-color: var(--text-color);
+      display: inline-block;
+      border-radius: 3px;
+      border: 1px solid var(--bg-header);
+      padding: 2px;
+      margin-inline: .5rem;
+      text-align: center;
+      width: 80px;
+      cursor: pointer;
+    }
+
+    #confirmBox button:hover {
+      background-color: #ddd;
+    }
   </style>
   <!-- <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css"> -->
 </head>
@@ -785,7 +877,7 @@ function getDatabases()
 
 <body>
   <header>
-    <h2>
+    <h2 onclick="testFunction()">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="2.757 3.149 493.825 493.719" width="30" height="30">
         <path id="Level_1" style="opacity: 1; fill: rgb(190, 80, 70); stroke: rgb(0, 0, 0); stroke-width: 7;"
           d="M 203.003 110.256 C 145.17 107.605 95.455 100.789 60.235 91.47 C 42.605 86.805 28.505 81.479 18.856 75.741 C 9.143 69.964 3.615 63.399 3.615 56.755 C 3.615 51.715 7.11 46.533 13.535 41.794 C 19.9 37.1 29.396 32.514 41.723 28.199 C 114.43 2.789 271.337 -4.567 386.077 12.056 C 436.533 19.377 472.298 30.362 488.01 43.336 C 492.523 47.099 495.34 51.01 496.171 54.809 C 497.012 58.649 495.823 62.655 492.881 66.362 C 475.961 87.168 408.406 103.256 311.353 109.525 C 293.557 110.675 222.579 111.151 203.003 110.256 Z">
@@ -829,16 +921,41 @@ function getDatabases()
   <main>
     <input id="sidebarCKB" type="checkbox" style="display:none">
     <nav>
-      <div class="dbList">
-        <h3>Database</h3>
-        <div class="itemList"></div>
+
+      <div class="newList">
+        <details open>
+          <summary>
+            <h3>New</h3>
+          </summary>
+          <div class="itemList">
+            <span id="openNewDatabaseBtn">Database</span>
+            <span id="openNewTableBtn">Table</span>
+            <span id="openNewColumnBtn">Column</span>
+            <span id="openNewRowBtn">Row</span>
+          </div>
+        </details>
       </div>
-      <div class="tableList">
-        <h3>Table</h3>
-        <div class="itemList"> </div>
-        <span id="openNewRowBtn">new Row</span>
+
+      <div class="dbList">
+        <details open>
+          <summary>
+            <h3>Database</h3>
+          </summary>
+          <div class="itemList"></div>
+        </details>
 
       </div>
+
+      <div class="tableList">
+        <details open>
+          <summary>
+            <h3>Table</h3>
+          </summary>
+          <div class="itemList"> </div>
+        </details>
+
+      </div>
+
     </nav>
     <article>
 
@@ -869,8 +986,18 @@ function getDatabases()
   </div>
 
   <div id="newRow">
-    <h3>add newRow <span id="closeNewRow"></span></h3>
+    <h3>add new Row <span id="closeNewRowBtn"></span></h3>
     <form class="saveNewRow" onsubmit="return saveNewRow(event)"></form>
+  </div>
+
+  <div id="newDatabase">
+    <h3>add new Database <span id="closeNewDatabaseBtn"></span></h3>
+    <form class="saveNewDatabase" onsubmit="return saveNewDatabase(event)">
+      <label>Name
+        <input type="text" name="name">
+      </label>
+      <input type="submit" value="save">
+    </form>
   </div>
 
 
@@ -887,120 +1014,131 @@ function getDatabases()
   -->
 
   <script>
-  // ELEMENTS
-  const loginForm = document.querySelector('form.login')
-  const dbList = document.querySelector('.dbList')
-  const tableList = document.querySelector('.tableList .itemList')
-  const article = document.querySelector('article')
-  const logOutBtn = document.querySelector('#logOut')
-  const storePW = document.querySelector('#storePW')
-  const wrongPW = document.querySelector('#wrongPW')
-  const closeNewRowBtn = document.querySelector('#closeNewRow')
-  const openNewRowBtn = document.querySelector('#openNewRowBtn')
-  const sidebarCKB = document.querySelector('#sidebarCKB')
+    // ELEMENTS
+    const loginForm = document.querySelector('form.login')
+    const dbList = document.querySelector('.dbList .itemList')
+    const tableList = document.querySelector('.tableList .itemList')
+    const article = document.querySelector('article')
+    const logOutBtn = document.querySelector('#logOut')
+    const storePW = document.querySelector('#storePW')
+    const wrongPW = document.querySelector('#wrongPW')
+    const closeNewRowBtn = document.querySelector('#closeNewRowBtn')
+    const openNewRowBtn = document.querySelector('#openNewRowBtn')
+    const closeNewDatabaseBtn = document.querySelector('#closeNewDatabaseBtn')
+    const openNewDatabaseBtn = document.querySelector('#openNewDatabaseBtn')
+    const sidebarCKB = document.querySelector('#sidebarCKB')
 
 
-  var focusedCell; //focused cell in table
+    var focusedCell; //focused cell in table
 
 
-  // LISTENER
-  loginForm.addEventListener('submit', login)
-  dbList.addEventListener('click', getTables)
-  tableList.addEventListener('click', getRows)
-  article.addEventListener('dblclick', makeEditable)
-  article.addEventListener('click', setFocusOnCell)
-  article.addEventListener('click', deleteRow)
-  logOutBtn.addEventListener('click', logOut)
-  closeNewRowBtn.addEventListener('click', closeNewRow)
-  openNewRowBtn.addEventListener('click', openNewRow)
+    // LISTENER
+    loginForm.addEventListener('submit', login)
+    dbList.addEventListener('click', getTables)
+    tableList.addEventListener('click', getRows)
+    article.addEventListener('dblclick', makeEditable)
+    article.addEventListener('click', setFocusOnCell)
+    article.addEventListener('click', deleteRow)
+    logOutBtn.addEventListener('click', logOut)
+    closeNewRowBtn.addEventListener('click', toggleNewRow)
+    openNewRowBtn.addEventListener('click', toggleNewRow)
+    closeNewDatabaseBtn.addEventListener('click', toggleNewDatabase)
+    openNewDatabaseBtn.addEventListener('click', toggleNewDatabase)
 
-
-  function logOut() {
-    window.localStorage.setItem('DBEPW', '')
-    window.localStorage.setItem('DBEDB', '')
-    window.localStorage.setItem('DBETA', '')
-    window.location.reload();
-  }
-
-  function store(key, value) {
-    if (DBobject.store) {
-      window.localStorage.setItem(key, value)
+    function logOut() {
+      window.localStorage.setItem('DBEPW', '')
+      window.localStorage.setItem('DBEDB', '')
+      window.localStorage.setItem('DBETA', '')
+      window.location.reload();
     }
-  }
 
-  //   VARIABLES
-  var DBobject = {
-    password: window.localStorage.getItem('DBEPW') || '',
-    database: window.localStorage.getItem('DBEPW') || '',
-    table: window.localStorage.getItem('DBETA') || '',
-    store: false,
-    data: {
-      databases: '',
-      tables: '',
-      rows: '',
-      key: '',
-      value: ''
-    }
-  }
-
-
-  /**
-   * 
-   * ONLOAD
-   * 
-   */
-  window.addEventListener('load', async () => {
-    // if password is saved in localstorage, login directly
-    if (window.localStorage.getItem('DBEPW')) {
-      await login()
-      // if databasename in localstorage get tables
-      if (window.localStorage.getItem('DBEDB')) {
-        getTables(window.localStorage.getItem('DBEDB'))
-        // if tablename in localstorage get rows
-        if (window.localStorage.getItem('DBETA')) {
-          setTimeout(() => {
-            getRows(window.localStorage.getItem('DBETA'))
-          }, 500);
-        }
+    function store(key, value) {
+      if (DBobject.store) {
+        window.localStorage.setItem(key, value)
       }
     }
 
-  })
+    //   STORE OBJECT
+    var DBobject = {
+      password: window.localStorage.getItem('DBEPW') || '',
+      database: window.localStorage.getItem('DBEPW') || '',
+      table: window.localStorage.getItem('DBETA') || '',
+      store: false,
+      data: {
+        databases: '',
+        tables: '',
+        rows: '',
+        key: '',
+        value: ''
+      }
+    }
+
+
+    /**
+     * 
+     * ONLOAD
+     * 
+     */
+    window.addEventListener('load', async () => {
+      // if password is saved in localstorage, login directly
+      if (window.localStorage.getItem('DBEPW')) {
+        await login()
+        // if databasename in localstorage get tables
+        if (window.localStorage.getItem('DBEDB')) {
+          getTables(window.localStorage.getItem('DBEDB'))
+          // if tablename in localstorage get rows
+          if (window.localStorage.getItem('DBETA')) {
+            setTimeout(() => {
+              getRows(window.localStorage.getItem('DBETA'))
+            }, 500);
+          }
+        }
+      }
+    })
+
+    /**
+     * 
+     * TEST FUNKTION
+     * 
+     */
+    function testFunction() {
+
+    }
+
+
+
+    /**
+     * 
+     * CLOSE NEW ROW DIALOG
+     * 
+     */
+    function toggleNewRow() {
+      document.querySelector('#newRow').classList.toggle('open');
+    }
+
+    function toggleNewDatabase() {
+      document.querySelector('#newDatabase').classList.toggle('open');
+    }
 
 
 
 
-  /**
-   * 
-   * CLOSE NEW ROW DIALOG
-   * 
-   */
-  function closeNewRow() {
-    document.querySelector('#newRow').style.display = 'none';
-  }
-
-  function openNewRow() {
-    document.querySelector('#newRow').style.display = 'block';
-  }
 
 
-
-
-
-  /**
-   * 
-   * DELETE ROW
-   * 
-   */
-  async function deleteRow(event) {
-    if (event.target.tagName === 'TD' && event.target.className === 'deleteRow') {
-      // load confirm with callback
-      let rowID = event.target.dataset.id
-      let text = 'Delete row ' + rowID + ' ?'
-      confirm(del, rowID, text)
-      // delete row function
-      function del(rowID) {
-        fetch('admin.php?deleteRow', {
+    /**
+     * 
+     * DELETE ROW
+     * 
+     */
+    async function deleteRow(event) {
+      if (event.target.tagName === 'TD' && event.target.className === 'deleteRow') {
+        // load confirm with callback
+        let rowID = event.target.dataset.id
+        let text = 'Delete row ' + rowID + ' ?'
+        confirm(del, rowID, text)
+        // delete row function
+        function del(rowID) {
+          fetch('admin.php?deleteRow', {
             method: 'POST',
             mode: "same-origin",
             credentials: "same-origin",
@@ -1015,89 +1153,83 @@ function getDatabases()
               row: rowID,
             }),
           })
-          .then(response => response.json())
-          .then(data => {
-            getRows(DBobject.table)
-          })
-          .catch((error) => {
-            console.error('Error:', error);
-          });
+            .then(response => response.json())
+            .then(data => {
+              getRows(DBobject.table)
+            })
+            .catch((error) => {
+              console.error('Error:', error);
+            });
+        }
       }
     }
-  }
 
 
-  /**
-   * 
-   * CONFIRM
-   * 
-   */
-  async function confirm(callback, text) {
-    // document.getElementById('confirmBox').style.display = "block";
-    document.getElementById('confirmBox').classList.add('open')
-    document.getElementById('confirmText').innerHTML = arguments[2]
-    document.getElementById('confirmBox').addEventListener('click', async (el) => {
+    /**
+     * 
+     * CONFIRM
+     * 
+     */
+    async function confirm(callback, text) {
+      document.getElementById('confirmBox').classList.add('open')
+      document.getElementById('confirmText').innerHTML = arguments[2]
+      document.getElementById('confirmBox').addEventListener('click', async (el) => {
+        // YES
+        if (el.target.id === 'confirmTrue') {
+          callback(arguments[1]);
+          document.getElementById('confirmBox').classList.remove('open')
+        }
+        // NO
+        else if (el.target.id === 'confirmFalse') {
+          document.getElementById('confirmBox').classList.remove('open')
+        }
 
-      // YES
-      if (el.target.id === 'confirmTrue') {
-        callback(arguments[1]);
-        // document.getElementById('confirmBox').style.display = "none";
-        document.getElementById('confirmBox').classList.remove('open')
-
-      }
-      // NO
-      else if (el.target.id === 'confirmFalse') {
-        document.getElementById('confirmBox').classList.remove('open')
-
-        // document.getElementById('confirmBox').style.display = "none";
-      }
-
-    })
-  }
-
-
-
-
-  /**
-   * 
-   * UPDATE VALUE ON ENTER KEY
-   * 
-   */
-  function updateValueOnEnter(event) {
-    console.log("updateValueOnEnter", event.key)
-
-    if (event.key === 'Enter') {
-      event.preventDefault()
-      console.log('ENTER')
-      focusedCell.removeEventListener('focusout', updateValue, true)
-      focusedCell.removeEventListener('keydown', updateValueOnEnter, true)
-      focusedCell.setAttribute("contenteditable", false);
-      focusedCell.tabIndex = -1;
-      updateValue(event)
-    }
-    // unset focusedCell
-    else if (event.key === 'Escape') {
-      // Esc
-      event.preventDefault()
-      console.log('ESC')
-      console.log(focusedCell.dataset.old)
-      focusedCell.innerHTML = focusedCell.dataset.old
-      focusedCell.setAttribute("data-old", '');
-      focusedCell.removeEventListener('focusout', updateValue, true)
-      focusedCell.removeEventListener('keydown', updateValueOnEnter, true)
-      focusedCell.setAttribute("contenteditable", false);
-      focusedCell.tabIndex = -1;
+      })
     }
 
-  }
 
-  /**
-   * 
-   * UPDATE VALUE
-   * 
-   */
-  function updateValue(event) {
-    fetch('admin.php?updateValue', {
+
+
+    /**
+     * 
+     * UPDATE VALUE ON ENTER KEY
+     * 
+     */
+    function updateValueOnEnter(event) {
+      console.log("updateValueOnEnter", event.key)
+
+      if (event.key === 'Enter') {
+        event.preventDefault()
+        console.log('ENTER')
+        focusedCell.removeEventListener('focusout', updateValue, true)
+        focusedCell.removeEventListener('keydown', updateValueOnEnter, true)
+        focusedCell.setAttribute("contenteditable", false);
+        focusedCell.tabIndex = -1;
+        updateValue(event)
+      }
+      // unset focusedCell
+      else if (event.key === 'Escape') {
+        // Esc
+        event.preventDefault()
+        console.log('ESC')
+        console.log(focusedCell.dataset.old)
+        focusedCell.innerHTML = focusedCell.dataset.old
+        focusedCell.setAttribute("data-old", '');
+        focusedCell.removeEventListener('focusout', updateValue, true)
+        focusedCell.removeEventListener('keydown', updateValueOnEnter, true)
+        focusedCell.setAttribute("contenteditable", false);
+        focusedCell.tabIndex = -1;
+      }
+
+    }
+
+    /**
+     * 
+     * UPDATE VALUE
+     * 
+     */
+    function updateValue(event) {
+      fetch('admin.php?updateValue', {
         method: 'POST',
         mode: "same-origin",
         credentials: "same-origin",
@@ -1114,36 +1246,86 @@ function getDatabases()
           value: event.target.textContent,
         }),
       })
-      .then(response => response.json())
-      .then(data => {
-        if (data.message == true) { // no type checking!!
-          event.target.classList.add('success')
-          event.target.setAttribute("contenteditable", false);
-        }
-        // read error message
-        else {
-          console.error(data.message)
+        .then(response => response.json())
+        .then(data => {
+          if (data.message == true) { // no type checking!!
+            event.target.classList.add('success')
+            event.target.setAttribute("contenteditable", false);
+          }
+          // read error message
+          else {
+            console.error(data.message)
+            event.target.classList.add('error')
+          }
+        })
+        .catch((error) => {
           event.target.classList.add('error')
-        }
+          console.error('Error:', error);
+        });
+      setTimeout(() => {
+        event.target.classList.remove('success')
+      }, 1000);
+    }
+
+
+
+
+    /**
+     * 
+     * SAVE NEW DATABASE
+     * 
+     */
+    function saveNewDatabase(event) {
+      event.preventDefault()
+      let databaseName = document.querySelector('form.saveNewDatabase')[0].value
+      console.log(databaseName)
+
+
+      fetch(`admin.php?saveNewDatabase`, {
+        method: 'POST',
+        mode: "same-origin",
+        credentials: "same-origin",
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          password: DBobject.password,
+          data: databaseName,
+        }),
       })
-      .catch((error) => {
-        event.target.classList.add('error')
-        console.error('Error:', error);
-      });
-    setTimeout(() => {
-      event.target.classList.remove('success')
-    }, 1000);
-  }
+        .then(response => response.json())
+        .then(data => {
+          console.log(data)
+          if (data.message == true) {
+            document.querySelector('#newDatabase').classList.remove('open');
+            getTables(databaseName)
+          } else {
+            console.log(data.message)
+          }
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
+    }
 
 
-  function saveNewRow(event) {
-    event.preventDefault()
-    let form = document.querySelector('form.saveNewRow')
-    // console.log(form)
-    let formData = new FormData(form);
-    const plainFormData = Object.fromEntries(formData.entries());
 
-    fetch(`admin.php?saveNewRow`, {
+
+
+    /**
+     * 
+     * SAVE NEW ROW
+     * 
+     */
+    function saveNewRow(event) {
+      event.preventDefault()
+      let form = document.querySelector('form.saveNewRow')
+      // console.log(form)
+      let formData = new FormData(form);
+      const plainFormData = Object.fromEntries(formData.entries());
+
+      fetch(`admin.php?saveNewRow`, {
         method: 'POST',
         mode: "same-origin",
         credentials: "same-origin",
@@ -1158,48 +1340,97 @@ function getDatabases()
           data: plainFormData,
         }),
       })
-      .then(response => response.json())
-      .then(data => {
-        // console.log(data)
-        if (data.message == true) {
+        .then(response => response.json())
+        .then(data => {
+          console.log(data)
+          if (data.message == true) {
+            document.querySelector('#newRow').classList.remove('open');
+            getRows(DBobject.table)
+            setTimeout(() => {
+              let dataTable = document.querySelector('table #table-content');
+              dataTable.scroll({
+                top: dataTable.scrollHeight,
+                behavior: "smooth"
+              })
+            }, 500);
+          }
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
+    }
+
+
+
+    /**
+     * 
+     * GET TABLE CONTENT
+     * 
+     */
+    async function getRows(event) {
+
+      // by click on link
+      if (event.type === 'click' && event.target.className === 'getRows') {
+        event.preventDefault()
+        DBobject.table = event.target.dataset.table
+        DBobject.database = event.target.dataset.database
+      }
+      // by click in TableInfo link
+      else if (event.type === 'click' && event.target.classList.contains('getTableInfo')) {
+        getTableInfo(event)
+        return
+      } else if (event.type === 'click') {
+        console.log(event.target)
+        return
+      }
+      // with tablename as parameterterteme
+      else {
+        DBobject.table = event
+        DBobject.database = DBobject.database
+      }
+      fetch(`admin.php?getRows`, {
+        method: 'POST',
+        mode: "same-origin",
+        credentials: "same-origin",
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          password: DBobject.password,
+          database: DBobject.database,
+          table: DBobject.table,
+        }),
+      })
+        .then(response => response.json())
+        .then(data => {
+          document.querySelector('.showTable').innerHTML = DBobject.table
+          store('DBETA', DBobject.table)
+          DBobject.data.rows = data.data.rows
+          sidebarCKB.checked = false
           refresh();
-          setTimeout(() => {
-            let scroll_to_bottom = document.querySelector('table.dataTable');
-            console.log(scroll_to_bottom)
-            scroll_to_bottom.scrollIntoView({
-              behavior: 'smooth',
-              block: 'end'
-            });
-            // scroll_to_bottom.scroll({ top: 2000, behavior: "smooth"})
-            // scroll_to_bottom.scrollTop = scroll_to_bottom.scrollHeight;
-            console.log(scroll_to_bottom.scrollHeight)
-            console.log(scroll_to_bottom.scrollTop)
-
-          }, 500);
-        }
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
-  }
-
-
-
-  /**
-   * 
-   * GET TABLE CONTENT
-   * 
-   */
-  async function getRows(event) {
-    if (event.type === 'click' && event.target.className === 'getRows') {
-      event.preventDefault()
-      DBobject.table = event.target.dataset.table
-      DBobject.database = event.target.dataset.database
-    } else {
-      DBobject.table = event
-      DBobject.database = DBobject.database
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
     }
-    fetch(`admin.php?getRows`, {
+
+    /**
+     * 
+     * GET TABLE INFO 
+     * 
+     */
+    function getTableInfo(event) {
+      console.log(event.target.className)
+      if (event.type === 'click' && event.target.classList.contains('getTableInfo')) {
+        DBobject.table = event.target.dataset.table
+        // DBobject.database = event.target.dataset.database 
+      } else {
+        DBobject.table = event
+        // DBobject.database = DBobject.database
+      }
+      console.log('getatbleinfo', event)
+      fetch('admin.php?getTableInfo', {
         method: 'POST',
         mode: "same-origin",
         credentials: "same-origin",
@@ -1213,38 +1444,43 @@ function getDatabases()
           table: DBobject.table,
         }),
       })
-      .then(response => response.json())
-      .then(data => {
-        document.querySelector('.showTable').innerHTML = DBobject.table
-        store('DBETA', DBobject.table)
-        DBobject.data.rows = data.data.rows
-        sidebarCKB.checked = false
-        refresh();
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
-  }
+        .then(response => response.json())
+        .then(data => {
+          console.log(data)
+          // document.querySelector('article').innerHTML = `<h2>Table Info: ${DBobject.table}</h2>`
+          //   document.querySelector('article').innerHTML = ''
 
+          store('DBEDB', DBobject.database)
+          document.querySelector('.showTable').innerHTML = DBobject.table + '<span class=showInfo> - Info</span>'
+          document.querySelector('.showDatabase').innerHTML = DBobject.database
+          document.querySelector('article').innerHTML = ''
+          makeTable(data.message, true)
 
-
-
-
-
-  /**
-   * 
-   * GET DATABASE TABLES
-   * 
-   */
-  async function getTables(event) {
-    if (event.type === 'click' && event.target.className === 'getTables') {
-      event.preventDefault()
-      DBobject.database = event.target.dataset.file
-    } else {
-      DBobject.database = event
+          // DBobject.data.rows = data.message
+          // refresh();
+          // return true;
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
     }
-    // console.log('getTables', DBobject)
-    fetch('admin.php?getTables', {
+
+
+
+    /**
+     * 
+     * GET DATABASE TABLES
+     * 
+     */
+    async function getTables(event) {
+      if (event.type === 'click' && event.target.className === 'getTables') {
+        event.preventDefault()
+        DBobject.database = event.target.dataset.file
+      } else {
+        DBobject.database = event
+      }
+      // console.log('getTables', DBobject)
+      fetch('admin.php?getTables', {
         method: 'POST',
         mode: "same-origin",
         credentials: "same-origin",
@@ -1258,43 +1494,41 @@ function getDatabases()
           table: DBobject.table,
         }),
       })
-      .then(response => response.json())
-      .then(data => {
-        store('DBEDB', DBobject.database)
-        document.querySelector('.showTable').innerHTML = 'choose table'
-        document.querySelector('.showDatabase').innerHTML = DBobject.database
-
-        document.querySelector('article').innerHTML = ''
-
-        DBobject.data.rows = ''
-        DBobject.data.tables = data.data.tables
-        refresh();
-        return true;
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
-  }
-
-
-
-
-
-
-  /**
-   * 
-   * LOGIN 
-   * 
-   */
-  async function login(event = '') {
-
-    if (event !== '') {
-      event.preventDefault()
-      DBobject.password = document.querySelector('form #password').value;
-    } else {
-      DBobject.password = window.localStorage.getItem('DBEPW')
+        .then(response => response.json())
+        .then(data => {
+          store('DBEDB', DBobject.database)
+          document.querySelector('.showTable').innerHTML = 'choose table'
+          document.querySelector('.showDatabase').innerHTML = DBobject.database
+          document.querySelector('article').innerHTML = ''
+          DBobject.data.rows = ''
+          DBobject.data.tables = data.data.tables
+          refresh();
+          return true;
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
     }
-    fetch('admin.php?login', {
+
+
+
+
+
+
+    /**
+     * 
+     * LOGIN 
+     * 
+     */
+    async function login(event = '') {
+
+      if (event !== '') {
+        event.preventDefault()
+        DBobject.password = document.querySelector('form #password').value;
+      } else {
+        DBobject.password = window.localStorage.getItem('DBEPW') || DBobject.password
+      }
+      fetch('admin.php?login', {
         method: 'POST',
         mode: "same-origin",
         credentials: "same-origin",
@@ -1306,325 +1540,337 @@ function getDatabases()
           password: DBobject.password
         }),
       })
-      .then(response => response.json())
-      .then(data => {
-        // console.log(data)
-        if (data.data.databases) {
+        .then(response => response.json())
+        .then(data => {
+          // console.log(data)
+          if (data.data.databases) {
 
-          if (storePW.checked) {
-            DBobject.store = true
+            if (storePW.checked) {
+              DBobject.store = true
+            }
+            store('DBEPW', DBobject.password)
+            DBobject.data.databases = data.data.databases
+            document.querySelector('.showDatabase').innerHTML = 'choose database'
+            // document.querySelector('article').innerHTML = ''
+            refresh();
+          } else {
+            wrongPW.innerHTML = 'Password incorrect'
+            console.info('wrong password')
           }
-          store('DBEPW', DBobject.password)
-          DBobject.data.databases = data.data.databases
-          document.querySelector('.showDatabase').innerHTML = 'choose database'
-          // document.querySelector('article').innerHTML = ''
-          refresh();
-        } else {
-          wrongPW.innerHTML = 'Password incorrect'
-          console.info('wrong password')
-        }
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
-  }
-
-
-  /**
-   * 
-   * REFRESH
-   * 
-   */
-  function refresh() {
-    // console.log('refresh: ', DBobject)
-
-    // databases list
-    //  
-    if (DBobject.data.databases !== '') {
-      let DB = '';
-      DBobject.data.databases.forEach(el => {
-        DB += `<li><a class="getTables" href="#" data-file=${el.file}>${el.name}</a></li>`
-      });
-      document.querySelector('.dbList').style.display = 'block'
-      document.querySelector('.dbList div').innerHTML = DB
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
     }
 
-    // table list
-    //
-    if (DBobject.data.tables !== '') {
-      let TAB = '';
-      DBobject.data.tables.forEach(el => {
-        TAB += `<li><a class="getRows" href="#" data-database=${el.database} data-table=${el.name}>${el.name}</a></li>`
-      });
-      document.querySelector('.tableList').style.display = 'block'
-      document.querySelector('.tableList div').innerHTML = TAB
-    }
 
-    // rows
-    // 
-    if (DBobject.data.rows !== '') {
-      document.querySelector('article').innerHTML = ''
-      makeTable(DBobject.data.rows)
-    }
+    /**
+     * 
+     * REFRESH
+     * 
+     */
+    function refresh() {
+      // console.log('refresh: ', DBobject)
 
-  }
-
-
-  /**
-   * 
-   * MAKE INPUT FIELDS EDITABLE
-   * 
-   */
-  function makeEditable(event) {
-    // console.log('makeEditable', event)
-    if (event.target.tagName === 'TD' && event.target.className !== 'deleteRow') {
-      event.preventDefault()
-      focusedCell = event.target
-      focusedCell.setAttribute("contenteditable", true);
-      focusedCell.setAttribute("data-old", focusedCell.innerHTML);
-      focusedCell.focus()
-      focusedCell.addEventListener('focusout', updateValue, true)
-      focusedCell.addEventListener('keydown', updateValueOnEnter, true)
-    }
-  }
-
-  /**
-   * 
-   * SET FOCUS ON CLICKED CELL
-   * 
-   */
-  function setFocusOnCell(event) {
-    // console.log('setFocusOnCell', event.target)
-    if (event.target.tagName === 'TD' && event.target.className !== 'deleteRow') {
-      event.preventDefault()
-      focusedCell = event.target
-      focusedCell.tabIndex = 3;
-      focusedCell.focus();
-    }
-  }
-
-
-
-
-  function keyOnTableStyling(sibling) {
-    if (sibling != null) {
-      focusedCell.focus();
-      focusedCell.tabIndex = -1;
-      sibling.focus();
-      sibling.tabIndex = 3;
-      focusedCell = sibling;
-    }
-  }
-
-
-  function keyOnTable(e) {
-    e = e || window.event;
-    // console.log('keyOnTable e.keyCode', e.keyCode)
-    if (e.target.contentEditable !== 'true') {
-      if (e.keyCode == '38') {
-        // up arrow
-        var idx = focusedCell.cellIndex;
-        var nextrow = focusedCell.parentElement.previousElementSibling;
-        if (nextrow != null) {
-          var sibling = nextrow.cells[idx];
-          keyOnTableStyling(sibling);
-        }
-      } else if (e.keyCode == '40') {
-        // down arrow
-        var idx = focusedCell.cellIndex;
-        var nextrow = focusedCell.parentElement.nextElementSibling;
-        if (nextrow != null) {
-          var sibling = nextrow.cells[idx];
-          keyOnTableStyling(sibling);
-        }
-      } else if (e.keyCode == '37') {
-        // left arrow
-        var sibling = focusedCell.previousElementSibling;
-        keyOnTableStyling(sibling);
-      } else if (e.keyCode == '39') {
-        // right arrow
-        var sibling = focusedCell.nextElementSibling;
-        keyOnTableStyling(sibling);
-      } else if (e.keyCode == '32') {
-        // space
-        makeEditable(e)
+      // databases list
+      //  
+      if (DBobject.data.databases !== '') {
+        let DB = '';
+        DBobject.data.databases.forEach(el => {
+          DB += `<li>
+                    <span class="getDatabaseInfo iInfo" title="Database Info" data-file=${el.file}>
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -5 420 755"><path d="m 290 100 a 90 90 90 1 1 -190 0 a 90 90 90 1 1 190 0 z m 20 550 c 0 30 10 40 40 40 l 50 0 v 50 h -390 v -50 l 60 0 c 30 0 40 -10 40 -40 v -310 c 0 -50 -60 -40 -110 -40 v -50 l 310 0 z"/></svg> 
+                    </span>          
+                    <a class="getTables" href="#" data-file=${el.file}>${el.name}</a>
+                </li>`
+        });
+        document.querySelector('.newList').style.display = 'block'
+        document.querySelector('.dbList').style.display = 'block'
+        document.querySelector('.dbList div').innerHTML = DB
       }
-      e.preventDefault()
+
+      // table list
+      //
+      if (DBobject.data.tables !== '') {
+        let TAB = '';
+        DBobject.data.tables.forEach(el => {
+          TAB += `<li>
+                    <span class="getTableInfo iInfo" title="Table Info" data-table=${el.name}>
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -5 420 755"><path d="m 290 100 a 90 90 90 1 1 -190 0 a 90 90 90 1 1 190 0 z m 20 550 c 0 30 10 40 40 40 l 50 0 v 50 h -390 v -50 l 60 0 c 30 0 40 -10 40 -40 v -310 c 0 -50 -60 -40 -110 -40 v -50 l 310 0 z"/></svg> 
+                    </span>
+                    <a class="getRows" href="#" data-database=${el.database} data-table=${el.name}>${el.name}</a>
+                </li>`
+        });
+        document.querySelector('.tableList').style.display = 'block'
+        document.querySelector('.tableList div').innerHTML = TAB
+      }
+
+      // rows
+      // 
+      if (DBobject.data.rows !== '') {
+        document.querySelector('article').innerHTML = ''
+        makeTable(DBobject.data.rows)
+      }
+
     }
-
-  }
-
-
-  /**
-   * 
-   * MAKE TABLE
-   * 
-   */
-  // https://jsfiddle.net/rh5aoxsL/
-  function makeTable(data) {
-
-    // create table
-    const table = document.createElement("table");
-    table.classList.add('dataTable')
-    // create THead  & TBody
-    const tableHead = table.createTHead();
-    const tableContent = table.createTBody();
-    tableContent.id = "table-content"
-    // append table to DOM 
-    document.querySelector('article').appendChild(table)
-
-    makeTableHead(data);
-    makeNewRow(data);
-    makeTableBody(data);
-    makeSort(data);
-
-    tableContent.onkeydown = keyOnTable;
 
 
 
     /**
      * 
-     * MAKE NEF ROW DIALOG
+     * MAKE INPUT FIELDS EDITABLE
      * 
      */
-    function makeNewRow(data) {
-      document.querySelector('#newRow form').innerHTML = '';
-
-      const objKeys = Object.keys(data[0]);
-      objKeys.map((key) => {
-        if (key !== 'id') {
-
-          const label = document.createElement("label");
-          label.innerHTML = key;
-
-          const input = document.createElement("input");
-          input.setAttribute("type", 'text');
-          input.setAttribute("name", key);
-          input.classList.add(key);
-
-          label.appendChild(input);
-          document.querySelector('#newRow form').appendChild(label);
-
-        }
-      });
-
-
-      const submit = document.createElement("input");
-
-      submit.setAttribute("type", 'submit');
-      submit.setAttribute("value", 'save');
-
-      // submit.setAttribute("onclick", 'saveNewRow(this)');
-
-
-      document.querySelector('#newRow form').appendChild(submit);
-    };
-
-    function makeTableHead(data) {
-      const row = document.createElement("tr");
-      const objKeys = Object.keys(data[0]);
-
-      const cell = document.createElement("th");
-      cell.classList.add('deleteRow');
-      cell.innerHTML = '';
-      row.appendChild(cell);
-
-
-      objKeys.map((key) => {
-        const cell = document.createElement("th");
-        cell.setAttribute("data-attr", key);
-        cell.classList.add(key);
-        cell.id = key;
-        cell.innerHTML = key;
-        row.appendChild(cell);
-      });
-      tableHead.appendChild(row);
-    };
-
-
-
-    function makeTableBody(data) {
-      data.map((obj) => {
-        const row = createRow(obj);
-        tableContent.appendChild(row);
-      });
-    };
-
-    function createRow(obj) {
-      const row = document.createElement("tr");
-      const objKeys = Object.keys(obj);
-      const id = obj['id']
-
-      const cell = document.createElement("td");
-      cell.setAttribute("data-id", id);
-      cell.classList.add('deleteRow');
-      cell.innerHTML = 'x';
-      row.appendChild(cell);
-
-
-      objKeys.map((key) => {
-        const cell = document.createElement("td");
-        cell.setAttribute("data-database", DBobject.database);
-        cell.setAttribute("data-table", DBobject.table);
-        cell.setAttribute("data-id", id);
-        cell.setAttribute("data-attr", key);
-        cell.classList.add(key);
-        cell.innerHTML = obj[key];
-        row.appendChild(cell);
-      });
-      return row;
-    };
-
-
-    function makeSort(data) {
-      const tableButtons = document.querySelectorAll("th");
-      [...tableButtons].map((button) => {
-        button.addEventListener("click", (e) => {
-          resetButtons(e);
-          if (e.target.getAttribute("data-dir") == "desc") {
-            sortData(data, e.target.id, "desc");
-            e.target.setAttribute("data-dir", "asc");
-          } else {
-            sortData(data, e.target.id, "asc");
-            e.target.setAttribute("data-dir", "desc");
-          }
-        });
-      });
-
-
-      function sortData(data, param, direction = "asc") {
-        tableContent.innerHTML = '';
-        const sortedData =
-          direction == "asc" ? [...data].sort(function(a, b) {
-            if (a[param] < b[param]) {
-              return -1;
-            }
-            if (a[param] > b[param]) {
-              return 1;
-            }
-            return 0;
-          }) : [...data].sort(function(a, b) {
-            if (b[param] < a[param]) {
-              return -1;
-            }
-            if (b[param] > a[param]) {
-              return 1;
-            }
-            return 0;
-          });
-
-        makeTableBody(sortedData);
-      };
-
-      const resetButtons = (event) => {
-        [...tableButtons].map((button) => {
-          if (button !== event.target) {
-            button.removeAttribute("data-dir");
-          }
-        });
-      };
+    function makeEditable(event) {
+      // console.log('makeEditable', event)
+      if (event.target.tagName === 'TD' && event.target.className !== 'deleteRow') {
+        event.preventDefault()
+        focusedCell = event.target
+        focusedCell.setAttribute("contenteditable", true);
+        focusedCell.setAttribute("data-old", focusedCell.innerHTML);
+        focusedCell.focus()
+        focusedCell.addEventListener('focusout', updateValue, true)
+        focusedCell.addEventListener('keydown', updateValueOnEnter, true)
+      }
     }
-  }
+
+    /**
+     * 
+     * SET FOCUS ON CLICKED CELL
+     * 
+     */
+    function setFocusOnCell(event) {
+      // console.log('setFocusOnCell', event.target)
+      if (event.target.tagName === 'TD' && event.target.className !== 'deleteRow') {
+        event.preventDefault()
+        focusedCell = event.target
+        focusedCell.tabIndex = 3;
+        focusedCell.focus();
+      }
+    }
+
+
+
+
+    function keyOnTableStyling(sibling) {
+      if (sibling != null) {
+        focusedCell.focus();
+        focusedCell.tabIndex = -1;
+        sibling.focus();
+        sibling.tabIndex = 3;
+        focusedCell = sibling;
+      }
+    }
+
+
+    function keyOnTable(e) {
+      e = e || window.event;
+      // console.log('keyOnTable e.keyCode', e.keyCode)
+      if (e.target.contentEditable !== 'true') {
+        if (e.keyCode == '38') {
+          // up arrow
+          var idx = focusedCell.cellIndex;
+          var nextrow = focusedCell.parentElement.previousElementSibling;
+          if (nextrow != null) {
+            var sibling = nextrow.cells[idx];
+            keyOnTableStyling(sibling);
+          }
+        } else if (e.keyCode == '40') {
+          // down arrow
+          var idx = focusedCell.cellIndex;
+          var nextrow = focusedCell.parentElement.nextElementSibling;
+          if (nextrow != null) {
+            var sibling = nextrow.cells[idx];
+            keyOnTableStyling(sibling);
+          }
+        } else if (e.keyCode == '37') {
+          // left arrow
+          var sibling = focusedCell.previousElementSibling;
+          keyOnTableStyling(sibling);
+        } else if (e.keyCode == '39') {
+          // right arrow
+          var sibling = focusedCell.nextElementSibling;
+          keyOnTableStyling(sibling);
+        } else if (e.keyCode == '32') {
+          // space
+          makeEditable(e)
+        }
+        e.preventDefault()
+      }
+
+    }
+
+
+    /**
+     * 
+     * MAKE TABLE
+     * 
+     */
+    // https://jsfiddle.net/rh5aoxsL/
+    function makeTable(data, tableInfo = false) {
+      console.log('makeTable', data)
+      // create table
+      const table = document.createElement("table");
+      table.classList.add('dataTable')
+      // create THead  & TBody
+      const tableHead = table.createTHead();
+      const tableContent = table.createTBody();
+      tableContent.id = "table-content"
+      // append table to DOM 
+      document.querySelector('article').appendChild(table)
+
+      makeTableHead(data);
+      makeNewRow(data);
+      makeTableBody(data);
+      makeSort(data);
+
+      tableContent.onkeydown = keyOnTable;
+
+
+
+      /**
+       * 
+       * MAKE NEW ROW DIALOG
+       * 
+       */
+      function makeNewRow(data) {
+        document.querySelector('#newRow form').innerHTML = '';
+
+        const objKeys = Object.keys(data[0]);
+        objKeys.map((key) => {
+          if (key !== 'id') {
+
+            const label = document.createElement("label");
+            label.innerHTML = key;
+
+            const input = document.createElement("input");
+            if (key === 'date') {
+              let datetime = new Date().toISOString().slice(0, 19).replace('T', ' ');
+              input.setAttribute("value", datetime);
+            }
+            input.setAttribute("type", 'text');
+            input.setAttribute("name", key);
+            input.classList.add(key);
+
+            label.appendChild(input);
+            document.querySelector('#newRow form').appendChild(label);
+
+          }
+        });
+        // submit button for NEW ROW DIALOG
+        const submit = document.createElement("input");
+        submit.setAttribute("type", 'submit');
+        submit.setAttribute("value", 'save');
+        document.querySelector('#newRow form').appendChild(submit);
+      };
+
+      function makeTableHead(data) {
+        const row = document.createElement("tr");
+        const objKeys = Object.keys(data[0]);
+        const cell = document.createElement("th");
+
+        if (!tableInfo) {
+          cell.classList.add('deleteRow');
+          cell.innerHTML = '';
+          row.appendChild(cell);
+        }
+
+        objKeys.map((key) => {
+          const cell = document.createElement("th");
+          cell.setAttribute("data-attr", key);
+          cell.classList.add(key);
+          cell.id = key;
+          cell.innerHTML = key;
+          row.appendChild(cell);
+        });
+        tableHead.appendChild(row);
+      };
+
+
+
+      function makeTableBody(data) {
+        data.map((obj) => {
+          const row = createRow(obj);
+          tableContent.appendChild(row);
+        });
+      };
+
+      function createRow(obj) {
+        const row = document.createElement("tr");
+        const objKeys = Object.keys(obj);
+        const id = obj['id']
+
+        const cell = document.createElement("td");
+        if (!tableInfo) {
+          cell.setAttribute("data-id", id);
+          cell.classList.add('deleteRow');
+          cell.innerHTML = 'x';
+          row.appendChild(cell);
+        }
+
+        objKeys.map((key) => {
+          const cell = document.createElement("td");
+          cell.setAttribute("data-database", DBobject.database);
+          cell.setAttribute("data-table", DBobject.table);
+          cell.setAttribute("data-id", id);
+          cell.setAttribute("data-attr", key);
+          cell.classList.add(key);
+          cell.innerHTML = obj[key];
+          row.appendChild(cell);
+        });
+        return row;
+      };
+
+
+      function makeSort(data) {
+        const tableButtons = document.querySelectorAll("th");
+        [...tableButtons].map((button) => {
+          button.addEventListener("click", (e) => {
+            resetButtons(e);
+            if (e.target.getAttribute("data-dir") == "desc") {
+              sortData(data, e.target.id, "desc");
+              e.target.setAttribute("data-dir", "asc");
+            } else {
+              sortData(data, e.target.id, "asc");
+              e.target.setAttribute("data-dir", "desc");
+            }
+          });
+        });
+
+
+        function sortData(data, param, direction = "asc") {
+          tableContent.innerHTML = '';
+          const sortedData =
+            direction == "asc" ? [...data].sort(function (a, b) {
+              if (a[param] < b[param]) {
+                return -1;
+              }
+              if (a[param] > b[param]) {
+                return 1;
+              }
+              return 0;
+            }) : [...data].sort(function (a, b) {
+              if (b[param] < a[param]) {
+                return -1;
+              }
+              if (b[param] > a[param]) {
+                return 1;
+              }
+              return 0;
+            });
+
+          makeTableBody(sortedData);
+        };
+
+        const resetButtons = (event) => {
+          [...tableButtons].map((button) => {
+            if (button !== event.target) {
+              button.removeAttribute("data-dir");
+            }
+          });
+        };
+      }
+    }
   </script>
 
 </body>
