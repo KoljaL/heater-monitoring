@@ -142,11 +142,27 @@ if ($response['API'] === true) {
 /////////////////////////////////    PHP    FUNCTIONS    ///////////////////////////
 /////////////////////////////////    PHP    FUNCTIONS    ///////////////////////////
 
-function saveNewTable(){
-    global $request, $dbFolder;
-  pprint($request);
+function saveNewTable() {
+  global $request, $dbFolder;
+  // pprint($request);
   $database = $request['database'];
   $data = $request['data'];
+  $rows = $request['data']['rows'];
+  $tableName = $request['data']['tableName'];
+
+  $db = new SQLite3($dbFolder . "/" . $database);
+  $db->exec("CREATE TABLE IF NOT EXISTS $tableName (id INTEGER PRIMARY KEY AUTOINCREMENT)");
+  $db->exec("ALTER TABLE $tableName ADD COLUMN date DATETIME DEFAULT CURRENT_TIMESTAMP");
+
+  // create a columns
+  foreach ($rows as $row) {
+    $name = $row['name'];
+    $type = $row['type'];
+    $null = $row['null'];
+    $defa = $row['defa'];
+    $db->exec("ALTER TABLE $tableName ADD COLUMN $name $type ");
+  }
+  return true;
 }
 
 function getTableInfo() {
@@ -166,9 +182,9 @@ function getTableInfo() {
   }
 
   $stmt = $db->prepare("SELECT COUNT(*) as count FROM $table");
-  $result = $stmt->execute(); 
-// pprint($result->fetchArray(SQLITE3_ASSOC));
- $array['tableCount'] = $result->fetchArray(SQLITE3_ASSOC)['count'];
+  $result = $stmt->execute();
+  // pprint($result->fetchArray(SQLITE3_ASSOC));
+  $array['tableCount'] = $result->fetchArray(SQLITE3_ASSOC)['count'];
   if ($array) {
     return $array;
   } else {
@@ -199,11 +215,11 @@ function saveNewRow() {
   if (isset($data['date']) && $data['date'] === '') {
     $data['date'] = date("Y-m-d H:i:s");
   }
-  
+
   // make strings from array
   $columns = '(' . implode(',', array_keys($data)) . ')';
   $values = "('" . implode("','", $data) . "')";
-  
+
   $db = new SQLite3($dbFolder . "/" . $database);
   // insert into DB
   $stmt = $db->prepare("INSERT INTO $table" . $columns . " VALUES" . $values);
@@ -363,551 +379,551 @@ function getDatabases() {
 -->
 
   <style>
-  :root {
-    --header-height: 50px;
-    --footer-height: 30px;
-    --main-height: calc(100vh - var(--header-height) - var(--footer-height));
-    --sidebar-width: 200px;
-    --bg-main: #1b1b1b;
-    --bg-header: #212121;
-    --bg-footer: #212121;
-    --bg-sidebar: rgb(52, 52, 52);
-    --blue: rgb(82, 139, 255);
-    --yellow: rgb(209, 154, 102);
-    --green: rgb(152, 195, 121);
-    --red: rgb(190, 80, 70);
-    --text-color: rgb(205, 205, 205);
-    --link-color: var(--blue);
-    /* --link-color: rgb(140, 180, 255); */
-    --link-hover-color: rgb(94, 158, 255);
-    --border-color: #858585;
+    :root {
+      --header-height: 50px;
+      --footer-height: 30px;
+      --main-height: calc(100vh - var(--header-height) - var(--footer-height));
+      --sidebar-width: 200px;
+      --bg-main: #1b1b1b;
+      --bg-header: #212121;
+      --bg-footer: #212121;
+      --bg-sidebar: rgb(52, 52, 52);
+      --blue: rgb(82, 139, 255);
+      --yellow: rgb(209, 154, 102);
+      --green: rgb(152, 195, 121);
+      --red: rgb(190, 80, 70);
+      --text-color: rgb(205, 205, 205);
+      --link-color: var(--blue);
+      /* --link-color: rgb(140, 180, 255); */
+      --link-hover-color: rgb(94, 158, 255);
+      --border-color: #858585;
 
-    --icon-checkbox: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(255, 255, 255)' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
-    --icon-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(162, 175, 185)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-    --icon-chevron-button: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(255, 255, 255)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-    --icon-chevron-button-inverse: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(0, 0, 0)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-    --icon-close: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(115, 130, 140)' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='6' x2='6' y2='18'%3E%3C/line%3E%3Cline x1='6' y1='6' x2='18' y2='18'%3E%3C/line%3E%3C/svg%3E");
-    --icon-date: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(162, 175, 185)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E");
-    --icon-invalid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(183, 28, 28)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cline x1='12' y1='8' x2='12' y2='12'%3E%3C/line%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'%3E%3C/line%3E%3C/svg%3E");
-    --icon-minus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(255, 255, 255)' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='5' y1='12' x2='19' y2='12'%3E%3C/line%3E%3C/svg%3E");
-    --icon-search: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(162, 175, 185)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
-    --icon-time: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(162, 175, 185)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cpolyline points='12 6 12 12 16 14'%3E%3C/polyline%3E%3C/svg%3E");
-    --icon-valid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(46, 125, 50)' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
-  }
-
-
-  /* scrollbar */
-
-  ::-webkit-scrollbar {
-    display: none;
-  }
-
-  * {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-    box-sizing: border-box;
-    transition: all .5s;
-  }
-
-  html {
-    font-size: 16px;
-    line-height: 1.5rem;
-  }
-
-  body {
-    margin: 0;
-    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    color: var(--text-color);
-    background-color: var(--bg-main);
-  }
-
-  header {
-    flex-shrink: 0;
-    height: var(--header-height);
-    background-color: var(--bg-header);
-    padding-inline: 1rem;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  header .menuIcon {
-    display: inline-flex;
-    height: 24px;
-  }
-
-  header .menuIcon svg {
-    fill: var(--text-color);
-    cursor: pointer;
-    width: 24px;
-    height: 24px;
-    margin-left: 1rem;
-  }
-
-  header .menuIcon svg:hover {
-    fill: var(--blue);
-  }
-
-  header .breadcrumb {
-    min-width: max-content;
-    align-self: end;
-    margin-bottom: 3px;
-  }
-
-  header .showDatabase {
-    color: var(--blue);
-  }
-
-  header .showTable {
-    color: var(--green);
-    padding-left: 1rem;
-  }
-
-  header .showInfo {
-    color: var(--text-color);
-  }
+      --icon-checkbox: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(255, 255, 255)' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+      --icon-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(162, 175, 185)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      --icon-chevron-button: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(255, 255, 255)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      --icon-chevron-button-inverse: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(0, 0, 0)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      --icon-close: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(115, 130, 140)' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='6' x2='6' y2='18'%3E%3C/line%3E%3Cline x1='6' y1='6' x2='18' y2='18'%3E%3C/line%3E%3C/svg%3E");
+      --icon-date: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(162, 175, 185)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E");
+      --icon-invalid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(183, 28, 28)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cline x1='12' y1='8' x2='12' y2='12'%3E%3C/line%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'%3E%3C/line%3E%3C/svg%3E");
+      --icon-minus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(255, 255, 255)' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='5' y1='12' x2='19' y2='12'%3E%3C/line%3E%3C/svg%3E");
+      --icon-search: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(162, 175, 185)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
+      --icon-time: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(162, 175, 185)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cpolyline points='12 6 12 12 16 14'%3E%3C/polyline%3E%3C/svg%3E");
+      --icon-valid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(46, 125, 50)' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+    }
 
 
+    /* scrollbar */
+
+    ::-webkit-scrollbar {
+      display: none;
+    }
+
+    * {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+      box-sizing: border-box;
+      transition: all .5s;
+    }
+
+    html {
+      font-size: 16px;
+      line-height: 1.5rem;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      color: var(--text-color);
+      background-color: var(--bg-main);
+    }
+
+    header {
+      flex-shrink: 0;
+      height: var(--header-height);
+      background-color: var(--bg-header);
+      padding-inline: 1rem;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header .menuIcon {
+      display: inline-flex;
+      height: 24px;
+    }
+
+    header .menuIcon svg {
+      fill: var(--text-color);
+      cursor: pointer;
+      width: 24px;
+      height: 24px;
+      margin-left: 1rem;
+    }
+
+    header .menuIcon svg:hover {
+      fill: var(--blue);
+    }
+
+    header .breadcrumb {
+      min-width: max-content;
+      align-self: end;
+      margin-bottom: 3px;
+    }
+
+    header .showDatabase {
+      color: var(--blue);
+    }
+
+    header .showTable {
+      color: var(--green);
+      padding-left: 1rem;
+    }
+
+    header .showInfo {
+      color: var(--text-color);
+    }
 
 
 
-  footer {
-    flex-shrink: 0;
-    height: var(--footer-height);
-    outline: 1px solid var(--border-color);
-    background-color: var(--bg-footer);
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
 
-  main {
-    flex-grow: 1;
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    outline: 1px solid var(--border-color);
-  }
 
-  main nav {
-    flex-shrink: 0;
-    width: var(--sidebar-width);
-    height: calc(var(--main-height) - 1px);
-    border-right: 1px solid var(--border-color);
-    background-color: var(--bg-sidebar);
-    z-index: 10;
-    position: relative;
-  }
+    footer {
+      flex-shrink: 0;
+      height: var(--footer-height);
+      outline: 1px solid var(--border-color);
+      background-color: var(--bg-footer);
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-  main nav>div {
-    padding: .5rem;
-  }
-
-  main article {
-    flex-grow: 1;
-    position: relative;
-  }
-
-  #toggleSidebar {
-    display: none;
-  }
-
-  @media only screen and (max-width: 800px) {
-    #toggleSidebar {
-      display: block;
+    main {
+      flex-grow: 1;
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      outline: 1px solid var(--border-color);
     }
 
     main nav {
-      overflow: hidden;
-      position: absolute;
-      width: 0;
-      transform: translateX(calc(var(--sidebar-width) * -1));
-    }
-
-    #sidebarCKB:checked~nav {
+      flex-shrink: 0;
       width: var(--sidebar-width);
-      transform: translateX(0);
-      position: absolute;
       height: calc(var(--main-height) - 1px);
-      transition: transform 1s;
+      border-right: 1px solid var(--border-color);
+      background-color: var(--bg-sidebar);
+      z-index: 10;
+      position: relative;
     }
-  }
 
-  a {
-    text-decoration: none;
-    color: var(--link-color);
-  }
+    main nav>div {
+      padding: .5rem;
+    }
 
-  a:hover {
-    /* color: var(--link-hover-color); */
-    filter: brightness(1.25);
-  }
+    main article {
+      flex-grow: 1;
+      position: relative;
+    }
 
-  details>summary {
-    list-style: none;
-  }
+    #toggleSidebar {
+      display: none;
+    }
 
-  details>summary::-webkit-details-marker {
-    display: none;
-  }
+    @media only screen and (max-width: 800px) {
+      #toggleSidebar {
+        display: block;
+      }
 
-  nav ul {
-    padding-left: 0;
-  }
+      main nav {
+        overflow: hidden;
+        position: absolute;
+        width: 0;
+        transform: translateX(calc(var(--sidebar-width) * -1));
+      }
 
-  li {
-    list-style-type: none;
-  }
+      #sidebarCKB:checked~nav {
+        width: var(--sidebar-width);
+        transform: translateX(0);
+        position: absolute;
+        height: calc(var(--main-height) - 1px);
+        transition: transform 1s;
+      }
+    }
 
-  select,
-  input {
-    font-size: 1rem;
-    color: var(--text-color);
-    background-color: transparent;
-    border: 1px solid var(--border-color);
-    border-radius: .3rem;
-    padding: .2rem;
-  }
+    a {
+      text-decoration: none;
+      color: var(--link-color);
+    }
 
-  main .centered {
-    width: max-content;
-    margin-inline: auto;
-    margin-top: 3rem;
-  }
+    a:hover {
+      /* color: var(--link-hover-color); */
+      filter: brightness(1.25);
+    }
 
-  form.login {
-    width: 150px;
-  }
+    details>summary {
+      list-style: none;
+    }
 
-  form.login input:not([type="checkbox"]) {
-    display: block;
-    margin-top: .5rem;
-    width: 100px;
-  }
+    details>summary::-webkit-details-marker {
+      display: none;
+    }
 
-  form.login label {
-    display: block;
-    margin-top: .5rem;
-    margin-bottom: .5rem;
-  }
+    nav ul {
+      padding-left: 0;
+    }
 
-  form #wrongPW {
-    color: var(--red);
-  }
+    li {
+      list-style-type: none;
+    }
 
-  /* LISTS IN NAV */
+    select,
+    input {
+      font-size: 1rem;
+      color: var(--text-color);
+      background-color: transparent;
+      border: 1px solid var(--border-color);
+      border-radius: .3rem;
+      padding: .2rem;
+    }
 
-  .newList,
-  .dbList,
-  .tableList {
-    display: none;
-  }
+    main .centered {
+      width: max-content;
+      margin-inline: auto;
+      margin-top: 3rem;
+    }
 
-  .newList h3,
-  .dbList h3,
-  .tableList h3 {
-    display: inline;
-    cursor: pointer;
-  }
+    form.login {
+      width: 150px;
+    }
 
-  .dbList a {
-    color: var(--blue);
-  }
+    form.login input:not([type="checkbox"]) {
+      display: block;
+      margin-top: .5rem;
+      width: 100px;
+    }
 
-  .tableList a {
-    color: var(--green);
-  }
+    form.login label {
+      display: block;
+      margin-top: .5rem;
+      margin-bottom: .5rem;
+    }
 
-  nav .iInfo svg {
-    width: 15px;
-    height: 15px;
-    fill: var(--text-color);
-  }
+    form #wrongPW {
+      color: var(--red);
+    }
+
+    /* LISTS IN NAV */
+
+    .newList,
+    .dbList,
+    .tableList {
+      display: none;
+    }
+
+    .newList h3,
+    .dbList h3,
+    .tableList h3 {
+      display: inline;
+      cursor: pointer;
+    }
+
+    .dbList a {
+      color: var(--blue);
+    }
+
+    .tableList a {
+      color: var(--green);
+    }
+
+    nav .iInfo svg {
+      width: 15px;
+      height: 15px;
+      fill: var(--text-color);
+    }
 
 
-  nav .iInfo svg:hover {
-    fill: var(--yellow);
-  }
+    nav .iInfo svg:hover {
+      fill: var(--yellow);
+    }
 
-  nav .iInfo svg:active {
-    fill: var(--red);
-    pointer-events: none;
-  }
+    nav .iInfo svg:active {
+      fill: var(--red);
+      pointer-events: none;
+    }
 
-  .itemList {
-    max-height: 300px;
-    overflow-y: scroll;
-    display: flex;
-    flex-direction: column;
-  }
+    .itemList {
+      max-height: 300px;
+      overflow-y: scroll;
+      display: flex;
+      flex-direction: column;
+    }
 
-  .itemList span {
-    color: var(--yellow);
-    cursor: pointer;
-  }
+    .itemList span {
+      color: var(--yellow);
+      cursor: pointer;
+    }
 
-  #DBobject {
-    position: absolute;
-    bottom: 0;
-  }
+    #DBobject {
+      position: absolute;
+      bottom: 0;
+    }
 
-  /* TABLE */
-  .dataTable {
-    border-collapse: collapse;
-    width: 100%;
-    overflow: scroll;
-    display: block;
-    scrollbar-width: thin;
-    width: calc(100vw - var(--sidebar-width) - 1px);
-  }
-
-  @media only screen and (max-width: 800px) {
+    /* TABLE */
     .dataTable {
-      width: 100vw;
+      border-collapse: collapse;
+      width: 100%;
+      overflow: scroll;
+      display: block;
+      scrollbar-width: thin;
+      width: calc(100vw - var(--sidebar-width) - 1px);
     }
-  }
 
-  .dataTable thead td {
-    cursor: pointer;
-  }
+    @media only screen and (max-width: 800px) {
+      .dataTable {
+        width: 100vw;
+      }
+    }
 
-  .dataTable thead,
-  .dataTable tbody {
-    display: block;
-  }
+    .dataTable thead td {
+      cursor: pointer;
+    }
 
-  .dataTable tbody {
-    height: calc(var(--main-height) - 50px);
-    width: max-content;
-    overflow-y: scroll;
-    overflow-x: visible;
-  }
+    .dataTable thead,
+    .dataTable tbody {
+      display: block;
+    }
 
-
-  .dataTable tbody tr:nth-of-type(even) {
-    backdrop-filter: brightness(0.8)
-  }
-
-  .dataTable tbody tr:hover {
-    background-color: var(--bg-sidebar);
-    backdrop-filter: brightness(0.8)
-  }
-
-  .dataTable th {
-    text-align: left;
-    padding: .5rem;
-    min-width: 200px;
-    white-space: nowrap;
-  }
-
-  .dataTable td {
-    padding-inline: .5rem;
-    min-width: 200px;
-    white-space: nowrap;
-    outline: 1px solid transparent;
-    border-radius: .25rem;
-  }
-
-  td:focus {
-    outline: 1px solid var(--text-color);
-  }
-
-  td.focus {
-    outline: 1px solid var(--yellow);
-  }
-
-  td[contenteditable="true"] {
-    outline: 1px solid var(--blue);
-  }
-
-  td[contenteditable].success {
-    outline: 1px solid var(--green);
-  }
-
-  td[contenteditable].error {
-    outline: 1px solid var(--red);
-  }
-
-  .dataTable th.deleteRow,
-  .dataTable td.deleteRow {
-    cursor: pointer;
-    min-width: 20px;
-    max-width: 20px;
-    color: var(--yellow);
-  }
+    .dataTable tbody {
+      height: calc(var(--main-height) - 50px);
+      width: max-content;
+      overflow-y: scroll;
+      overflow-x: visible;
+    }
 
 
-  .dataTable td.deleteRow:hover {
-    color: var(--red);
-  }
+    .dataTable tbody tr:nth-of-type(even) {
+      backdrop-filter: brightness(0.8)
+    }
+
+    .dataTable tbody tr:hover {
+      background-color: var(--bg-sidebar);
+      backdrop-filter: brightness(0.8)
+    }
+
+    .dataTable th {
+      text-align: left;
+      padding: .5rem;
+      min-width: 200px;
+      white-space: nowrap;
+    }
+
+    .dataTable td {
+      padding-inline: .5rem;
+      min-width: 200px;
+      white-space: nowrap;
+      outline: 1px solid transparent;
+      border-radius: .25rem;
+    }
+
+    td:focus {
+      outline: 1px solid var(--text-color);
+    }
+
+    td.focus {
+      outline: 1px solid var(--yellow);
+    }
+
+    td[contenteditable="true"] {
+      outline: 1px solid var(--blue);
+    }
+
+    td[contenteditable].success {
+      outline: 1px solid var(--green);
+    }
+
+    td[contenteditable].error {
+      outline: 1px solid var(--red);
+    }
+
+    .dataTable th.deleteRow,
+    .dataTable td.deleteRow {
+      cursor: pointer;
+      min-width: 20px;
+      max-width: 20px;
+      color: var(--yellow);
+    }
 
 
-  .dataTable th.id,
-  .dataTable td.id {
-    min-width: 50px;
-    max-width: 50px;
-  }
+    .dataTable td.deleteRow:hover {
+      color: var(--red);
+    }
 
-  .dataTable th.date,
-  .dataTable td.date {
-    min-width: 250px;
-    max-width: 250px;
-  }
 
-  #newTable,
-  #newDatabase,
-  #newRow {
-    position: absolute;
-    top: 20px;
-    left: calc(50% - 100px);
-    z-index: 100;
-    width: 300px;
-    background-color: var(--bg-sidebar);
-    border-radius: 5px;
-    border: 1px solid var(--border-color);
-    padding: 1rem;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 500ms ease;
-    top: -10vh;
-  }
+    .dataTable th.id,
+    .dataTable td.id {
+      min-width: 50px;
+      max-width: 50px;
+    }
 
-  #newTable {
-    width: 600px;
-    left: calc(50% - 200px);
-  }
+    .dataTable th.date,
+    .dataTable td.date {
+      min-width: 250px;
+      max-width: 250px;
+    }
 
-  #newTable.open,
-  #newDatabase.open,
-  #newRow.open {
-    opacity: 1;
-    visibility: visible;
-    top: var(--header-height);
-  }
+    #newTable,
+    #newDatabase,
+    #newRow {
+      position: absolute;
+      top: 20px;
+      left: calc(50% - 100px);
+      z-index: 100;
+      width: 300px;
+      background-color: var(--bg-sidebar);
+      border-radius: 5px;
+      border: 1px solid var(--border-color);
+      padding: 1rem;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 500ms ease;
+      top: -10vh;
+    }
 
-  #newTable h3,
-  #newDatabase h3,
-  #newRow h3 {
-    position: relative;
-    margin: .5rem;
-    margin-top: 0;
-    text-align: center;
-    color: var(--yellow);
-  }
+    #newTable {
+      width: 600px;
+      left: calc(50% - 200px);
+    }
 
-  #newTable h3 #closeNewTableBtn,
-  #newDatabase h3 #closeNewDatabaseBtn,
-  #newRow h3 #closeNewRowBtn {
-    background-image: var(--icon-close);
-    content: ' ';
-    width: 20px;
-    height: 20px;
-    color: var(--text-color);
-    cursor: pointer;
-    position: absolute;
-    top: -.6rem;
-    right: -.5rem;
-  }
+    #newTable.open,
+    #newDatabase.open,
+    #newRow.open {
+      opacity: 1;
+      visibility: visible;
+      top: var(--header-height);
+    }
 
-  #newTable h3 #closeNewTableBtn:hover,
-  #newDatabase h3 #closeNewDatabaseBtn:hover,
-  #newRow h3 #closeNewRowBtn:hover {
-    color: var(--red);
-  }
+    #newTable h3,
+    #newDatabase h3,
+    #newRow h3 {
+      position: relative;
+      margin: .5rem;
+      margin-top: 0;
+      text-align: center;
+      color: var(--yellow);
+    }
 
-  #newTable form,
-  #newDatabase form,
-  #newRow form {
-    display: flex;
-    flex-direction: column;
-  }
+    #newTable h3 #closeNewTableBtn,
+    #newDatabase h3 #closeNewDatabaseBtn,
+    #newRow h3 #closeNewRowBtn {
+      background-image: var(--icon-close);
+      content: ' ';
+      width: 20px;
+      height: 20px;
+      color: var(--text-color);
+      cursor: pointer;
+      position: absolute;
+      top: -.6rem;
+      right: -.5rem;
+    }
 
-  #newDatabase form input,
-  #newRow form input {
-    width: 100%;
-    margin-bottom: 1rem;
-  }
+    #newTable h3 #closeNewTableBtn:hover,
+    #newDatabase h3 #closeNewDatabaseBtn:hover,
+    #newRow h3 #closeNewRowBtn:hover {
+      color: var(--red);
+    }
 
-  #newTable form input,
-  #newTable form select {
-    width: 100%;
-    margin-bottom: .5rem;
-  }
+    #newTable form,
+    #newDatabase form,
+    #newRow form {
+      display: flex;
+      flex-direction: column;
+    }
 
-  #newTable form input[type=submit],
-  #newDatabase form input[type=submit],
-  #newRow form input[type=submit] {
-    cursor: pointer;
-    margin-top: 1rem;
-    margin-bottom: .5rem;
-    color: var(--bg-header);
-    background-color: var(--text-color);
-    border: 1px solid var(--border-color);
+    #newDatabase form input,
+    #newRow form input {
+      width: 100%;
+      margin-bottom: 1rem;
+    }
 
-  }
+    #newTable form input,
+    #newTable form select {
+      width: 100%;
+      margin-bottom: .5rem;
+    }
 
-  #newDatabase form input[type=submit]:hover,
+    #newTable form input[type=submit],
+    #newDatabase form input[type=submit],
+    #newRow form input[type=submit] {
+      cursor: pointer;
+      margin-top: 1rem;
+      margin-bottom: .5rem;
+      color: var(--bg-header);
+      background-color: var(--text-color);
+      border: 1px solid var(--border-color);
 
-  #newRow form input[type=submit]:hover {
-    background-color: #ddd;
-  }
+    }
 
-  #addColumnBtn {
-    cursor: pointer;
-    color: var(--yellow);
-    margin-left: 1rem;
-  }
+    #newDatabase form input[type=submit]:hover,
 
-  #addColumnBtn:hover {
-    color: var(--red);
-  }
+    #newRow form input[type=submit]:hover {
+      background-color: #ddd;
+    }
 
-  #confirmBox {
-    color: var(--yellow);
-    background-color: var(--bg-sidebar);
-    border-radius: 5px;
-    border: 1px solid var(--border-color);
-    max-width: 300px;
-    position: fixed;
-    left: 50%;
-    margin-left: -150px;
-    margin-top: 10vh;
-    padding: .5rem;
-    box-sizing: border-box;
-    text-align: center;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 500ms ease;
-    /* transition: all 500ms cubic-bezier(0.335, 0.010, 0.030, 1.360); */
-    top: -10vh;
-  }
+    #addColumnBtn {
+      cursor: pointer;
+      color: var(--yellow);
+      margin-left: 1rem;
+    }
 
-  #confirmBox.open {
-    opacity: 1;
-    visibility: visible;
-    top: 0;
-  }
+    #addColumnBtn:hover {
+      color: var(--red);
+    }
 
-  #confirmBox button {
-    background-color: var(--text-color);
-    display: inline-block;
-    border-radius: 3px;
-    border: 1px solid var(--bg-header);
-    padding: 2px;
-    margin-inline: .5rem;
-    text-align: center;
-    width: 80px;
-    cursor: pointer;
-  }
+    #confirmBox {
+      color: var(--yellow);
+      background-color: var(--bg-sidebar);
+      border-radius: 5px;
+      border: 1px solid var(--border-color);
+      max-width: 300px;
+      position: fixed;
+      left: 50%;
+      margin-left: -150px;
+      margin-top: 10vh;
+      padding: .5rem;
+      box-sizing: border-box;
+      text-align: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 500ms ease;
+      /* transition: all 500ms cubic-bezier(0.335, 0.010, 0.030, 1.360); */
+      top: -10vh;
+    }
 
-  #confirmBox button:hover {
-    background-color: #ddd;
-  }
+    #confirmBox.open {
+      opacity: 1;
+      visibility: visible;
+      top: 0;
+    }
+
+    #confirmBox button {
+      background-color: var(--text-color);
+      display: inline-block;
+      border-radius: 3px;
+      border: 1px solid var(--bg-header);
+      padding: 2px;
+      margin-inline: .5rem;
+      text-align: center;
+      width: 80px;
+      cursor: pointer;
+    }
+
+    #confirmBox button:hover {
+      background-color: #ddd;
+    }
   </style>
   <!-- <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css"> -->
 </head>
@@ -1048,16 +1064,15 @@ function getDatabases() {
     </form>
   </div>
 
-  <div id="newTable" class="open">
+  <div id="newTable" class="openc">
     <h3>add new Table <span id="closeNewTableBtn"></span></h3>
     <form class="saveNewTable" onsubmit="return saveNewTable(event)">
       <label style="display: inline-flex;gap: 1rem;">Tablename
-        <input type="text" name="tablename">
+        <input type="text" name="tablename" id="newTableTableName">
       </label>
       <hr style="width:100%">
 
       <label>Columns<span id=addColumnBtn>+</span></label>
-
       <table>
         <thead>
           <tr>
@@ -1089,160 +1104,157 @@ function getDatabases() {
   -->
 
   <script>
-  // ELEMENTS
-  const loginForm = document.querySelector('form.login')
-  const dbList = document.querySelector('.dbList .itemList')
-  const tableList = document.querySelector('.tableList .itemList')
-  const article = document.querySelector('article')
-  const logOutBtn = document.querySelector('#logOut')
-  const storePW = document.querySelector('#storePW')
-  const wrongPW = document.querySelector('#wrongPW')
-  const closeNewRowBtn = document.querySelector('#closeNewRowBtn')
-  const openNewRowBtn = document.querySelector('#openNewRowBtn')
-  const closeNewDatabaseBtn = document.querySelector('#closeNewDatabaseBtn')
-  const openNewDatabaseBtn = document.querySelector('#openNewDatabaseBtn')
-  const closeNewTableBtn = document.querySelector('#closeNewTableBtn')
-  const openNewTableBtn = document.querySelector('#openNewTableBtn')
-  const addColumnBtn = document.querySelector('#addColumnBtn')
+    // ELEMENTS
+    const loginForm = document.querySelector('form.login')
+    const dbList = document.querySelector('.dbList .itemList')
+    const tableList = document.querySelector('.tableList .itemList')
+    const article = document.querySelector('article')
+    const logOutBtn = document.querySelector('#logOut')
+    const storePW = document.querySelector('#storePW')
+    const wrongPW = document.querySelector('#wrongPW')
+    const closeNewRowBtn = document.querySelector('#closeNewRowBtn')
+    const openNewRowBtn = document.querySelector('#openNewRowBtn')
+    const closeNewDatabaseBtn = document.querySelector('#closeNewDatabaseBtn')
+    const openNewDatabaseBtn = document.querySelector('#openNewDatabaseBtn')
+    const closeNewTableBtn = document.querySelector('#closeNewTableBtn')
+    const openNewTableBtn = document.querySelector('#openNewTableBtn')
+    const addColumnBtn = document.querySelector('#addColumnBtn')
 
 
-  const sidebarCKB = document.querySelector('#sidebarCKB')
+    const sidebarCKB = document.querySelector('#sidebarCKB')
 
 
-  var focusedCell; //focused cell in table
+    var focusedCell; //focused cell in table
 
 
-  // LISTENER
-  loginForm.addEventListener('submit', login)
-  dbList.addEventListener('click', getTables)
-  tableList.addEventListener('click', getRows)
-  article.addEventListener('dblclick', makeEditable)
-  article.addEventListener('click', setFocusOnCell)
-  article.addEventListener('click', deleteRow)
-  logOutBtn.addEventListener('click', logOut)
-  closeNewRowBtn.addEventListener('click', toggleNewRow)
-  openNewRowBtn.addEventListener('click', toggleNewRow)
-  closeNewDatabaseBtn.addEventListener('click', toggleNewDatabase)
-  openNewDatabaseBtn.addEventListener('click', toggleNewDatabase)
-  closeNewTableBtn.addEventListener('click', toggleNewTable)
-  openNewTableBtn.addEventListener('click', toggleNewTable)
-  addColumnBtn.addEventListener('click', addColumn)
+    // LISTENER
+    loginForm.addEventListener('submit', login)
+    dbList.addEventListener('click', getTables)
+    tableList.addEventListener('click', getRows)
+    article.addEventListener('dblclick', makeEditable)
+    article.addEventListener('click', setFocusOnCell)
+    article.addEventListener('click', deleteRow)
+    logOutBtn.addEventListener('click', logOut)
+    closeNewRowBtn.addEventListener('click', toggleNewRow)
+    openNewRowBtn.addEventListener('click', toggleNewRow)
+    closeNewDatabaseBtn.addEventListener('click', toggleNewDatabase)
+    openNewDatabaseBtn.addEventListener('click', toggleNewDatabase)
+    closeNewTableBtn.addEventListener('click', toggleNewTable)
+    openNewTableBtn.addEventListener('click', toggleNewTable)
+    addColumnBtn.addEventListener('click', addColumn)
 
-  function logOut() {
-    window.localStorage.setItem('DBEPW', '')
-    window.localStorage.setItem('DBEDB', '')
-    window.localStorage.setItem('DBETA', '')
-    DBobject.login = false
-    window.location.reload();
-  }
-
-  function store(key, value) {
-    if (DBobject.store) {
-      window.localStorage.setItem(key, value)
+    function logOut() {
+      window.localStorage.setItem('DBEPW', '')
+      window.localStorage.setItem('DBEDB', '')
+      window.localStorage.setItem('DBETA', '')
+      DBobject.login = false
+      window.location.reload();
     }
-  }
 
-  //   STORE OBJECT
-  var DBobject = {
-    password: window.localStorage.getItem('DBEPW') || '',
-    database: window.localStorage.getItem('DBEPW') || '',
-    table: window.localStorage.getItem('DBETA') || '',
-    store: false,
-    login: false,
-    data: {
-      databases: '',
-      tables: '',
-      rows: '',
-      key: '',
-      value: ''
-    }
-  }
-
-
-  /**
-   * 
-   * ONLOAD
-   * 
-   */
-  window.addEventListener('load', async () => {
-    // if password is saved in localstorage, login directly
-    if (window.localStorage.getItem('DBEPW')) {
-      await login()
-      // if databasename in localstorage get tables
-      if (window.localStorage.getItem('DBEDB')) {
-        getTables(window.localStorage.getItem('DBEDB'))
-        // if tablename in localstorage get rows
-        if (window.localStorage.getItem('DBETA')) {
-          setTimeout(() => {
-            getRows(window.localStorage.getItem('DBETA'))
-          }, 500);
-        }
+    function store(key, value) {
+      if (DBobject.store) {
+        window.localStorage.setItem(key, value)
       }
     }
-  })
 
-  /**
-   * 
-   * TEST FUNKTION
-   * 
-   */
-  function testFunction() {
-
-  }
-
-
-
-  /**
-   * 
-   * CLOSE NEW ROW DIALOG
-   * 
-   */
-  function toggleNewRow() {
-    document.querySelector('#newRow').classList.toggle('open');
-  }
-
-  function toggleNewDatabase() {
-    document.querySelector('#newDatabase').classList.toggle('open');
-  }
-
-  function toggleNewTable() {
-    document.querySelector('#newTable').classList.toggle('open');
-  }
+    //   STORE OBJECT
+    var DBobject = {
+      password: window.localStorage.getItem('DBEPW') || '',
+      database: window.localStorage.getItem('DBEPW') || '',
+      table: window.localStorage.getItem('DBETA') || '',
+      store: false,
+      login: false,
+      data: {
+        databases: '',
+        tables: '',
+        rows: '',
+        key: '',
+        value: ''
+      }
+    }
 
 
-  /**
-   * 
-   * SAVE NEW TABLE
-   * 
-   */
-  function saveNewTable(event) {
-    event.preventDefault()
-    // let form = document.querySelector('form.saveNewTable')
-    // let formData = new FormData(form);
-    // const plainFormData = Object.fromEntries(formData.entries());
-    // console.log('formData', formData)
-    // console.log('plainFormData', plainFormData)
+    /**
+     * 
+     * ONLOAD
+     * 
+     */
+    window.addEventListener('load', async () => {
+      // if password is saved in localstorage, login directly
+      if (window.localStorage.getItem('DBEPW')) {
+        await login()
+        // if databasename in localstorage get tables
+        if (window.localStorage.getItem('DBEDB')) {
+          getTables(window.localStorage.getItem('DBEDB'))
+          // if tablename in localstorage get rows
+          if (window.localStorage.getItem('DBETA')) {
+            setTimeout(() => {
+              getRows(window.localStorage.getItem('DBETA'))
+            }, 500);
+          }
+        }
+      }
+    })
 
-    let table = document.querySelector('#newTableTable')
-    console.log('table', table)
-        const data =  new FormData();
+    /**
+     * 
+     * TEST FUNKTION
+     * 
+     */
+    function testFunction() {
 
-        let rows = table.querySelectorAll('tr')
-        rows.forEach(row =>{
-          console.log(row)
-
-          for (let item of row.childNodes) {
-    console.log(item);
-}
- 
+    }
 
 
+
+    /**
+     * 
+     * CLOSE NEW ROW DIALOG
+     * 
+     */
+    function toggleNewRow() {
+      document.querySelector('#newRow').classList.toggle('open');
+    }
+
+    function toggleNewDatabase() {
+      document.querySelector('#newDatabase').classList.toggle('open');
+    }
+
+    function toggleNewTable() {
+      document.querySelector('#newTable').classList.toggle('open');
+    }
+
+
+    /**
+     * 
+     * SAVE NEW TABLE
+     * 
+     */
+    function saveNewTable(event) {
+      event.preventDefault()
+
+      let table = document.querySelector('#newTableTable')
+      let data = {};
+      data.tableName = document.querySelector('#newTableTableName').value
+      data['rows'] = {}
+      let rows = table.querySelectorAll('tr')
+      rows.forEach(row => {
+        // console.log(row)
+        let rowID = row.id.replace('row_', '')
+        let cells = row.querySelectorAll('td')
+        let dataset = {}
+
+        cells.forEach(item => {
+          let name = item.firstChild.name
+          let value = item.firstChild.value
+          dataset[name] = value
         })
+        // console.log('dataseta',dataset)
+        data.rows[rowID] = dataset
+      })
 
-
-   
-    console.log(data)
-    fetch('admin.php?saveNewTable', {
+      console.log('data', data)
+      fetch('admin.php?saveNewTable', {
         method: 'POST',
         mode: "same-origin",
         credentials: "same-origin",
@@ -1253,64 +1265,59 @@ function getDatabases() {
         body: JSON.stringify({
           password: DBobject.password,
           database: DBobject.database,
-          data: plainFormData
+          data: data
         })
 
       })
-      .then(response => response.json())
-      .then(data => {
-        console.log(data)
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
+        .then(response => response.json())
+        .then(data => {
+          console.log(data)
+          if(data.message){
+      document.querySelector('#newTable').classList.toggle('open');
+          }
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
 
-  }
-
-  /** 
-   * 
-   * ADD COLUMN
-   * 
-   */
-  function addColumn() {
-    let table = document.querySelector('#newTableTable')
-    let i = table.children.length
-        let cells = `<td><input type="text" name="data[${i}][name]"></td>
-                <td><select name="data[${i}][type]">
-                <option value="TEXT">TEXT</option>
-                <option value="FLOAT">FLOAT</option>
-                </select>
-                </td>
-                <td><input type="text" name="data[${i}][null]"></td>
-                <td><input type="text" name="data[${i}][default]"></td>`
-    // let cells = `<td><input type="text" name="name[]"></td>
-    //             <td><select name="type[]">
-    //             <option value="TEXT">TEXT</option>
-    //             <option value="FLOAT">FLOAT</option>
-    //             </select>
-    //             </td>
-    //             <td><input type="text" name="null[]"></td>
-    //             <td><input type="text" name="defa[]"></td>`
-    let row = document.createElement('tr')
-    row.innerHTML = cells
-    table.appendChild(row);
-  }
+    } 
+    /** 
+     * 
+     * ADD COLUMN
+     * 
+     */
+    function addColumn() {
+      let table = document.querySelector('#newTableTable')
+      let i = table.children.length
+      let cells = `<td><input type="text" name="name"></td>
+                  <td><select name="type">
+                  <option value="TEXT">TEXT</option>
+                  <option value="FLOAT">FLOAT</option>
+                  </select>
+                  </td>
+                  <td><input type="text" name="null"></td>
+                  <td><input type="text" name="defa"></td>`
+      let row = document.createElement('tr')
+      row.innerHTML = cells
+      row.id = 'row_' + i
+      table.appendChild(row);
+    }
 
 
-  /**
-   * 
-   * DELETE ROW
-   * 
-   */
-  async function deleteRow(event) {
-    if (event.target.tagName === 'TD' && event.target.className === 'deleteRow') {
-      // load confirm with callback
-      let rowID = event.target.dataset.id
-      let text = 'Delete row ' + rowID + ' ?'
-      confirm(del, rowID, text)
-      // delete row function
-      function del(rowID) {
-        fetch('admin.php?deleteRow', {
+    /**
+     * 
+     * DELETE ROW
+     * 
+     */
+    async function deleteRow(event) {
+      if (event.target.tagName === 'TD' && event.target.className === 'deleteRow') {
+        // load confirm with callback
+        let rowID = event.target.dataset.id
+        let text = 'Delete row ' + rowID + ' ?'
+        confirm(del, rowID, text)
+        // delete row function
+        function del(rowID) {
+          fetch('admin.php?deleteRow', {
             method: 'POST',
             mode: "same-origin",
             credentials: "same-origin",
@@ -1325,83 +1332,83 @@ function getDatabases() {
               row: rowID,
             }),
           })
-          .then(response => response.json())
-          .then(data => {
-            getRows(DBobject.table)
-          })
-          .catch((error) => {
-            console.error('Error:', error);
-          });
+            .then(response => response.json())
+            .then(data => {
+              getRows(DBobject.table)
+            })
+            .catch((error) => {
+              console.error('Error:', error);
+            });
+        }
       }
     }
-  }
 
 
-  /**
-   * 
-   * CONFIRM
-   * 
-   */
-  async function confirm(callback, text) {
-    document.getElementById('confirmBox').classList.add('open')
-    document.getElementById('confirmText').innerHTML = arguments[2]
-    document.getElementById('confirmBox').addEventListener('click', async (el) => {
-      // YES
-      if (el.target.id === 'confirmTrue') {
-        callback(arguments[1]);
-        document.getElementById('confirmBox').classList.remove('open')
-      }
-      // NO
-      else if (el.target.id === 'confirmFalse') {
-        document.getElementById('confirmBox').classList.remove('open')
-      }
+    /**
+     * 
+     * CONFIRM
+     * 
+     */
+    async function confirm(callback, text) {
+      document.getElementById('confirmBox').classList.add('open')
+      document.getElementById('confirmText').innerHTML = arguments[2]
+      document.getElementById('confirmBox').addEventListener('click', async (el) => {
+        // YES
+        if (el.target.id === 'confirmTrue') {
+          callback(arguments[1]);
+          document.getElementById('confirmBox').classList.remove('open')
+        }
+        // NO
+        else if (el.target.id === 'confirmFalse') {
+          document.getElementById('confirmBox').classList.remove('open')
+        }
 
-    })
-  }
-
-
-
-
-  /**
-   * 
-   * UPDATE VALUE ON ENTER KEY
-   * 
-   */
-  function updateValueOnEnter(event) {
-    console.log("updateValueOnEnter", event.key)
-
-    if (event.key === 'Enter') {
-      event.preventDefault()
-      console.log('ENTER')
-      focusedCell.removeEventListener('focusout', updateValue, true)
-      focusedCell.removeEventListener('keydown', updateValueOnEnter, true)
-      focusedCell.setAttribute("contenteditable", false);
-      focusedCell.tabIndex = -1;
-      updateValue(event)
-    }
-    // unset focusedCell
-    else if (event.key === 'Escape') {
-      // Esc
-      event.preventDefault()
-      console.log('ESC')
-      console.log(focusedCell.dataset.old)
-      focusedCell.innerHTML = focusedCell.dataset.old
-      focusedCell.setAttribute("data-old", '');
-      focusedCell.removeEventListener('focusout', updateValue, true)
-      focusedCell.removeEventListener('keydown', updateValueOnEnter, true)
-      focusedCell.setAttribute("contenteditable", false);
-      focusedCell.tabIndex = -1;
+      })
     }
 
-  }
 
-  /**
-   * 
-   * UPDATE VALUE
-   * 
-   */
-  function updateValue(event) {
-    fetch('admin.php?updateValue', {
+
+
+    /**
+     * 
+     * UPDATE VALUE ON ENTER KEY
+     * 
+     */
+    function updateValueOnEnter(event) {
+      console.log("updateValueOnEnter", event.key)
+
+      if (event.key === 'Enter') {
+        event.preventDefault()
+        console.log('ENTER')
+        focusedCell.removeEventListener('focusout', updateValue, true)
+        focusedCell.removeEventListener('keydown', updateValueOnEnter, true)
+        focusedCell.setAttribute("contenteditable", false);
+        focusedCell.tabIndex = -1;
+        updateValue(event)
+      }
+      // unset focusedCell
+      else if (event.key === 'Escape') {
+        // Esc
+        event.preventDefault()
+        console.log('ESC')
+        console.log(focusedCell.dataset.old)
+        focusedCell.innerHTML = focusedCell.dataset.old
+        focusedCell.setAttribute("data-old", '');
+        focusedCell.removeEventListener('focusout', updateValue, true)
+        focusedCell.removeEventListener('keydown', updateValueOnEnter, true)
+        focusedCell.setAttribute("contenteditable", false);
+        focusedCell.tabIndex = -1;
+      }
+
+    }
+
+    /**
+     * 
+     * UPDATE VALUE
+     * 
+     */
+    function updateValue(event) {
+      fetch('admin.php?updateValue', {
         method: 'POST',
         mode: "same-origin",
         credentials: "same-origin",
@@ -1418,40 +1425,40 @@ function getDatabases() {
           value: event.target.textContent,
         }),
       })
-      .then(response => response.json())
-      .then(data => {
-        if (data.message == true) { // no type checking!!
-          event.target.classList.add('success')
-          event.target.setAttribute("contenteditable", false);
-        }
-        // read error message
-        else {
-          console.error(data.message)
+        .then(response => response.json())
+        .then(data => {
+          if (data.message == true) { // no type checking!!
+            event.target.classList.add('success')
+            event.target.setAttribute("contenteditable", false);
+          }
+          // read error message
+          else {
+            console.error(data.message)
+            event.target.classList.add('error')
+          }
+        })
+        .catch((error) => {
           event.target.classList.add('error')
-        }
-      })
-      .catch((error) => {
-        event.target.classList.add('error')
-        console.error('Error:', error);
-      });
-    setTimeout(() => {
-      event.target.classList.remove('success')
-    }, 1000);
-  }
+          console.error('Error:', error);
+        });
+      setTimeout(() => {
+        event.target.classList.remove('success')
+      }, 1000);
+    }
 
 
 
 
-  /**
-   * 
-   * SAVE NEW DATABASE
-   * 
-   */
-  function saveNewDatabase(event) {
-    event.preventDefault()
-    let databaseName = document.querySelector('form.saveNewDatabase')[0].value
-    // console.log(databaseName)
-    fetch(`admin.php?saveNewDatabase`, {
+    /**
+     * 
+     * SAVE NEW DATABASE
+     * 
+     */
+    function saveNewDatabase(event) {
+      event.preventDefault()
+      let databaseName = document.querySelector('form.saveNewDatabase')[0].value
+      // console.log(databaseName)
+      fetch(`admin.php?saveNewDatabase`, {
         method: 'POST',
         mode: "same-origin",
         credentials: "same-origin",
@@ -1464,38 +1471,38 @@ function getDatabases() {
           data: databaseName,
         }),
       })
-      .then(response => response.json())
-      .then(data => {
-        console.log(data)
-        if (data.message == true) {
-          document.querySelector('#newDatabase').classList.remove('open');
-          getTables(databaseName)
-        } else {
-          console.log(data.message)
-        }
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
-  }
+        .then(response => response.json())
+        .then(data => {
+          console.log(data)
+          if (data.message == true) {
+            document.querySelector('#newDatabase').classList.remove('open');
+            getTables(databaseName)
+          } else {
+            console.log(data.message)
+          }
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
+    }
 
 
 
 
 
-  /**
-   * 
-   * SAVE NEW ROW
-   * 
-   */
-  function saveNewRow(event) {
-    event.preventDefault()
-    let form = document.querySelector('form.saveNewRow')
-    // console.log(form)
-    let formData = new FormData(form);
-    const plainFormData = Object.fromEntries(formData.entries());
+    /**
+     * 
+     * SAVE NEW ROW
+     * 
+     */
+    function saveNewRow(event) {
+      event.preventDefault()
+      let form = document.querySelector('form.saveNewRow')
+      // console.log(form)
+      let formData = new FormData(form);
+      const plainFormData = Object.fromEntries(formData.entries());
 
-    fetch(`admin.php?saveNewRow`, {
+      fetch(`admin.php?saveNewRow`, {
         method: 'POST',
         mode: "same-origin",
         credentials: "same-origin",
@@ -1510,55 +1517,55 @@ function getDatabases() {
           data: plainFormData,
         }),
       })
-      .then(response => response.json())
-      .then(data => {
-        console.log(data)
-        if (data.message == true) {
-          document.querySelector('#newRow').classList.remove('open');
-          getRows(DBobject.table)
-          setTimeout(() => {
-            let dataTable = document.querySelector('table #table-content');
-            dataTable.scroll({
-              top: dataTable.scrollHeight,
-              behavior: "smooth"
-            })
-          }, 500);
-        }
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
-  }
-
-
-
-  /**
-   * 
-   * GET TABLE CONTENT
-   * 
-   */
-  async function getRows(event) {
-
-    // by click on link
-    if (event.type === 'click' && event.target.className === 'getRows') {
-      event.preventDefault()
-      DBobject.table = event.target.dataset.table
-      DBobject.database = event.target.dataset.database
+        .then(response => response.json())
+        .then(data => {
+          console.log(data)
+          if (data.message == true) {
+            document.querySelector('#newRow').classList.remove('open');
+            getRows(DBobject.table)
+            setTimeout(() => {
+              let dataTable = document.querySelector('table #table-content');
+              dataTable.scroll({
+                top: dataTable.scrollHeight,
+                behavior: "smooth"
+              })
+            }, 500);
+          }
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
     }
-    // by click in TableInfo link
-    else if (event.type === 'click' && event.target.classList.contains('getTableInfo')) {
-      getTableInfo(event)
-      return
-    } else if (event.type === 'click') {
-      console.log(event.target)
-      return
-    }
-    // with tablename as parameterterteme
-    else {
-      DBobject.table = event
-      DBobject.database = DBobject.database
-    }
-    fetch(`admin.php?getRows`, {
+
+
+
+    /**
+     * 
+     * GET TABLE CONTENT
+     * 
+     */
+    async function getRows(event) {
+
+      // by click on link
+      if (event.type === 'click' && event.target.className === 'getRows') {
+        event.preventDefault()
+        DBobject.table = event.target.dataset.table
+        DBobject.database = event.target.dataset.database
+      }
+      // by click in TableInfo link
+      else if (event.type === 'click' && event.target.classList.contains('getTableInfo')) {
+        getTableInfo(event)
+        return
+      } else if (event.type === 'click') {
+        console.log(event.target)
+        return
+      }
+      // with tablename as parameterterteme
+      else {
+        DBobject.table = event
+        DBobject.database = DBobject.database
+      }
+      fetch(`admin.php?getRows`, {
         method: 'POST',
         mode: "same-origin",
         credentials: "same-origin",
@@ -1572,36 +1579,36 @@ function getDatabases() {
           table: DBobject.table,
         }),
       })
-      .then(response => response.json())
-      .then(data => {
-        document.querySelector('.showTable').innerHTML = DBobject.table
-        store('DBETA', DBobject.table)
-        DBobject.data.rows = data.data.rows
-        sidebarCKB.checked = false
-        refresh();
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
-  }
-
-  /**
-   * 
-   * GET TABLE INFO 
-   * 
-   */
-  function getTableInfo(event) {
-    if (event.type === 'click' && event.target.classList.contains('getTableInfo')) {
-      DBobject.table = event.target.dataset.table
-      // DBobject.database = event.target.dataset.database 
-    } else {
-      DBobject.table = event
-      // DBobject.database = DBobject.database
+        .then(response => response.json())
+        .then(data => {
+          document.querySelector('.showTable').innerHTML = DBobject.table
+          store('DBETA', DBobject.table)
+          DBobject.data.rows = data.data.rows
+          sidebarCKB.checked = false
+          refresh();
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
     }
-    // console.log('getatbleinfo', event)
-    // console.log('getTableInfo DBo', DBobject)
 
-    fetch('admin.php?getTableInfo', {
+    /**
+     * 
+     * GET TABLE INFO 
+     * 
+     */
+    function getTableInfo(event) {
+      if (event.type === 'click' && event.target.classList.contains('getTableInfo')) {
+        DBobject.table = event.target.dataset.table
+        // DBobject.database = event.target.dataset.database 
+      } else {
+        DBobject.table = event
+        // DBobject.database = DBobject.database
+      }
+      // console.log('getatbleinfo', event)
+      // console.log('getTableInfo DBo', DBobject)
+
+      fetch('admin.php?getTableInfo', {
         method: 'POST',
         mode: "same-origin",
         credentials: "same-origin",
@@ -1615,113 +1622,113 @@ function getDatabases() {
           table: DBobject.table,
         }),
       })
-      .then(response => response.json())
-      .then(data => {
-        // console.log('getTableInfo data', data)
-        store('DBEDB', DBobject.database)
-        let tableCount = data.data.tableCount
-        document.querySelector('.showTable').innerHTML = DBobject.table + `<span class=showInfo> - Count: ${tableCount}</span>`
-        document.querySelector('.showDatabase').innerHTML = DBobject.database
-        document.querySelector('article').innerHTML = ''
-        makeTable(data.data.tableInfo, true)
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
-  }
-
-
-
-  /**
-   * 
-   * GET DATABASE TABLES
-   * 
-   */
-  async function getTables(event) {
-    let info = false;
-    if (event.type === 'click' && event.target.className === 'getTables') {
-      event.preventDefault()
-      DBobject.database = event.target.dataset.file
-    }
-    // by click in DatabaseInfo link
-    else if (event.type === 'click' && event.target.classList.contains('getDatabaseInfo')) {
-      event.preventDefault()
-      DBobject.database = event.target.dataset.file
-      info = true
-    } else {
-      DBobject.database = event
-    }
-    // console.log('getTables', DBobject)
-    fetch('admin.php?getTables', {
-        method: 'POST',
-        mode: "same-origin",
-        credentials: "same-origin",
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          password: DBobject.password,
-          database: DBobject.database,
-          table: DBobject.table,
-        }),
-      })
-      .then(response => response.json())
-      .then(data => {
-        // console.log('getTables',data)
-        store('DBEDB', DBobject.database)
-        document.querySelector('.showDatabase').innerHTML = DBobject.database
-        DBobject.data.rows = ''
-
-
-        // found tables in database
-        if (data.data.tables.length) {
-          DBobject.data.tables = data.data.tables
-          document.querySelector('.showTable').innerHTML = 'choose table'
+        .then(response => response.json())
+        .then(data => {
+          // console.log('getTableInfo data', data)
+          store('DBEDB', DBobject.database)
+          let tableCount = data.data.tableCount
+          document.querySelector('.showTable').innerHTML = DBobject.table + `<span class=showInfo> - Count: ${tableCount}</span>`
+          document.querySelector('.showDatabase').innerHTML = DBobject.database
           document.querySelector('article').innerHTML = ''
-          let infoArray = []
-          data.data.tables.forEach(tab => {
-            infoArray.push(tab.full)
-          })
-          makeTable(infoArray, true)
-
-        }
-        // NO tables in database
-        else {
-          DBobject.table = ''
-          DBobject.data.tables = ''
-          store('DBETA', '')
-          document.querySelector('.showTable').innerHTML = ''
-          document.querySelector('article').innerHTML = '<h3 class="centered">empty Database</h3>'
-        }
-
-        refresh();
-        return true;
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
-  }
-
-
-
-
-
-
-  /**
-   * 
-   * LOGIN 
-   * 
-   */
-  async function login(event = '') {
-
-    if (event !== '') {
-      event.preventDefault()
-      DBobject.password = document.querySelector('form #password').value;
-    } else {
-      DBobject.password = window.localStorage.getItem('DBEPW') || DBobject.password
+          makeTable(data.data.tableInfo, true)
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
     }
-    fetch('admin.php?login', {
+
+
+
+    /**
+     * 
+     * GET DATABASE TABLES
+     * 
+     */
+    async function getTables(event) {
+      let info = false;
+      if (event.type === 'click' && event.target.className === 'getTables') {
+        event.preventDefault()
+        DBobject.database = event.target.dataset.file
+      }
+      // by click in DatabaseInfo link
+      else if (event.type === 'click' && event.target.classList.contains('getDatabaseInfo')) {
+        event.preventDefault()
+        DBobject.database = event.target.dataset.file
+        info = true
+      } else {
+        DBobject.database = event
+      }
+      // console.log('getTables', DBobject)
+      fetch('admin.php?getTables', {
+        method: 'POST',
+        mode: "same-origin",
+        credentials: "same-origin",
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          password: DBobject.password,
+          database: DBobject.database,
+          table: DBobject.table,
+        }),
+      })
+        .then(response => response.json())
+        .then(data => {
+          // console.log('getTables',data)
+          store('DBEDB', DBobject.database)
+          document.querySelector('.showDatabase').innerHTML = DBobject.database
+          DBobject.data.rows = ''
+
+
+          // found tables in database
+          if (data.data.tables.length) {
+            DBobject.data.tables = data.data.tables
+            document.querySelector('.showTable').innerHTML = 'choose table'
+            document.querySelector('article').innerHTML = ''
+            let infoArray = []
+            data.data.tables.forEach(tab => {
+              infoArray.push(tab.full)
+            })
+            makeTable(infoArray, true)
+
+          }
+          // NO tables in database
+          else {
+            DBobject.table = ''
+            DBobject.data.tables = ''
+            store('DBETA', '')
+            document.querySelector('.showTable').innerHTML = ''
+            document.querySelector('article').innerHTML = '<h3 class="centered">empty Database</h3>'
+          }
+
+          refresh();
+          return true;
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
+    }
+
+
+
+
+
+
+    /**
+     * 
+     * LOGIN 
+     * 
+     */
+    async function login(event = '') {
+
+      if (event !== '') {
+        event.preventDefault()
+        DBobject.password = document.querySelector('form #password').value;
+      } else {
+        DBobject.password = window.localStorage.getItem('DBEPW') || DBobject.password
+      }
+      fetch('admin.php?login', {
         method: 'POST',
         mode: "same-origin",
         credentials: "same-origin",
@@ -1733,367 +1740,367 @@ function getDatabases() {
           password: DBobject.password
         }),
       })
-      .then(response => response.json())
-      .then(data => {
-        // console.log(data)
-        if (data.data.databases) {
+        .then(response => response.json())
+        .then(data => {
+          // console.log(data)
+          if (data.data.databases) {
 
-          if (storePW.checked) {
-            DBobject.store = true
+            if (storePW.checked) {
+              DBobject.store = true
+            }
+            store('DBEPW', DBobject.password)
+            DBobject.login = true
+            DBobject.data.databases = data.data.databases
+            document.querySelector('.showDatabase').innerHTML = 'choose database'
+            refresh();
+          } else {
+            wrongPW.innerHTML = 'Password incorrect'
+            console.info('wrong password')
           }
-          store('DBEPW', DBobject.password)
-          DBobject.login = true
-          DBobject.data.databases = data.data.databases
-          document.querySelector('.showDatabase').innerHTML = 'choose database'
-          refresh();
-        } else {
-          wrongPW.innerHTML = 'Password incorrect'
-          console.info('wrong password')
-        }
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
-  }
-
-
-  /**
-   * 
-   * REFRESH
-   * 
-   */
-  function refresh() {
-    // console.log('refresh: ', DBobject)
-
-    // DEBUG element
-    document.querySelector('#DBobject').innerHTML = `<li>${DBobject.database}</li><li>${DBobject.table}</li>`
-    // console.log(DBobject)
-
-    // LOGIN
-    if (DBobject.login) {
-      document.querySelector('.newList').style.display = 'block'
-      document.querySelector('article').innerHTML = ''
-    } else {
-      document.querySelector('.newList').style.display = 'none'
-    }
-
-    // DATABASE
-    if (DBobject.database) {
-      document.querySelector('#openNewTableBtn').style.display = 'block'
-    } else {
-      document.querySelector('#openNewTableBtn').style.display = 'none'
-    }
-
-    // TABLE
-    if (DBobject.table) {
-      document.querySelector('#openNewColumnBtn').style.display = 'block'
-      document.querySelector('#openNewRowBtn').style.display = 'block'
-    } else {
-      document.querySelector('#openNewColumnBtn').style.display = 'none'
-      document.querySelector('#openNewRowBtn').style.display = 'none'
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
     }
 
 
-    // databases list
-    //  
-    if (DBobject.data.databases !== '') {
-      let DB = '';
-      DBobject.data.databases.forEach(el => {
-        DB += `<li>
+    /**
+     * 
+     * REFRESH
+     * 
+     */
+    function refresh() {
+      // console.log('refresh: ', DBobject)
+
+      // DEBUG element
+      document.querySelector('#DBobject').innerHTML = `<li>${DBobject.database}</li><li>${DBobject.table}</li>`
+      // console.log(DBobject)
+
+      // LOGIN
+      if (DBobject.login) {
+        document.querySelector('.newList').style.display = 'block'
+        document.querySelector('article').innerHTML = ''
+      } else {
+        document.querySelector('.newList').style.display = 'none'
+      }
+
+      // DATABASE
+      if (DBobject.database) {
+        document.querySelector('#openNewTableBtn').style.display = 'block'
+      } else {
+        document.querySelector('#openNewTableBtn').style.display = 'none'
+      }
+
+      // TABLE
+      if (DBobject.table) {
+        document.querySelector('#openNewColumnBtn').style.display = 'block'
+        document.querySelector('#openNewRowBtn').style.display = 'block'
+      } else {
+        document.querySelector('#openNewColumnBtn').style.display = 'none'
+        document.querySelector('#openNewRowBtn').style.display = 'none'
+      }
+
+
+      // databases list
+      //  
+      if (DBobject.data.databases !== '') {
+        let DB = '';
+        DBobject.data.databases.forEach(el => {
+          DB += `<li>
                   <!--<span class="getDatabaseInfo iInfo" title="Database Info" data-file=${el.file}><svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -5 420 755"><path d="m 290 100 a 90 90 90 1 1 -190 0 a 90 90 90 1 1 190 0 z m 20 550 c 0 30 10 40 40 40 l 50 0 v 50 h -390 v -50 l 60 0 c 30 0 40 -10 40 -40 v -310 c 0 -50 -60 -40 -110 -40 v -50 l 310 0 z"/></svg> </span>-->          
                     <a class="getTables" href="#" data-file=${el.file}>${el.name}</a>
                 </li>`
-      });
-      document.querySelector('.dbList').style.display = 'block'
-      document.querySelector('.dbList div').innerHTML = DB
-    } else {
-      document.querySelector('.dbList').style.display = 'none'
-      document.querySelector('.dbList div').innerHTML = ''
-    }
+        });
+        document.querySelector('.dbList').style.display = 'block'
+        document.querySelector('.dbList div').innerHTML = DB
+      } else {
+        document.querySelector('.dbList').style.display = 'none'
+        document.querySelector('.dbList div').innerHTML = ''
+      }
 
-    // table list
-    //
-    if (DBobject.data.tables !== '') {
-      let TAB = '';
-      DBobject.data.tables.forEach(el => {
-        TAB += `<li>
+      // table list
+      //
+      if (DBobject.data.tables !== '') {
+        let TAB = '';
+        DBobject.data.tables.forEach(el => {
+          TAB += `<li>
                     <span class="getTableInfo iInfo" title="Table Info" data-table=${el.name}><svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -5 420 755"><path d="m 290 100 a 90 90 90 1 1 -190 0 a 90 90 90 1 1 190 0 z m 20 550 c 0 30 10 40 40 40 l 50 0 v 50 h -390 v -50 l 60 0 c 30 0 40 -10 40 -40 v -310 c 0 -50 -60 -40 -110 -40 v -50 l 310 0 z"/></svg> </span>
                     <a class="getRows" href="#" data-database=${el.database} data-table=${el.name}>${el.name}</a>
                 </li>`
-      });
-      document.querySelector('.tableList').style.display = 'block'
-      document.querySelector('.tableList div').innerHTML = TAB
-    } else {
-      document.querySelector('.tableList').style.display = 'none'
-      document.querySelector('.tableList div').innerHTML = ''
-    }
-
-    // rows
-    // 
-    if (DBobject.data.rows !== '') {
-      document.querySelector('article').innerHTML = ''
-      makeTable(DBobject.data.rows)
-    }
-
-  }
-
-
-
-  /**
-   * 
-   * MAKE INPUT FIELDS EDITABLE
-   * 
-   */
-  function makeEditable(event) {
-    // console.log('makeEditable', event)
-    if (event.target.tagName === 'TD' && event.target.className !== 'deleteRow') {
-      event.preventDefault()
-      focusedCell = event.target
-      focusedCell.setAttribute("contenteditable", true);
-      focusedCell.setAttribute("data-old", focusedCell.innerHTML);
-      focusedCell.focus()
-      focusedCell.addEventListener('focusout', updateValue, true)
-      focusedCell.addEventListener('keydown', updateValueOnEnter, true)
-    }
-  }
-
-  /**
-   * 
-   * SET FOCUS ON CLICKED CELL
-   * 
-   */
-  function setFocusOnCell(event) {
-    // console.log('setFocusOnCell', event.target)
-    if (event.target.tagName === 'TD' && event.target.className !== 'deleteRow') {
-      event.preventDefault()
-      focusedCell = event.target
-      focusedCell.tabIndex = 3;
-      focusedCell.focus();
-    }
-  }
-
-
-
-
-  function keyOnTableStyling(sibling) {
-    if (sibling != null) {
-      focusedCell.focus();
-      focusedCell.tabIndex = -1;
-      sibling.focus();
-      sibling.tabIndex = 3;
-      focusedCell = sibling;
-    }
-  }
-
-
-  function keyOnTable(e) {
-    e = e || window.event;
-    // console.log('keyOnTable e.keyCode', e.keyCode)
-    if (e.target.contentEditable !== 'true') {
-      if (e.keyCode == '38') {
-        // up arrow
-        var idx = focusedCell.cellIndex;
-        var nextrow = focusedCell.parentElement.previousElementSibling;
-        if (nextrow != null) {
-          var sibling = nextrow.cells[idx];
-          keyOnTableStyling(sibling);
-        }
-      } else if (e.keyCode == '40') {
-        // down arrow
-        var idx = focusedCell.cellIndex;
-        var nextrow = focusedCell.parentElement.nextElementSibling;
-        if (nextrow != null) {
-          var sibling = nextrow.cells[idx];
-          keyOnTableStyling(sibling);
-        }
-      } else if (e.keyCode == '37') {
-        // left arrow
-        var sibling = focusedCell.previousElementSibling;
-        keyOnTableStyling(sibling);
-      } else if (e.keyCode == '39') {
-        // right arrow
-        var sibling = focusedCell.nextElementSibling;
-        keyOnTableStyling(sibling);
-      } else if (e.keyCode == '32') {
-        // space
-        makeEditable(e)
+        });
+        document.querySelector('.tableList').style.display = 'block'
+        document.querySelector('.tableList div').innerHTML = TAB
+      } else {
+        document.querySelector('.tableList').style.display = 'none'
+        document.querySelector('.tableList div').innerHTML = ''
       }
-      e.preventDefault()
+
+      // rows
+      // 
+      if (DBobject.data.rows !== '') {
+        document.querySelector('article').innerHTML = ''
+        makeTable(DBobject.data.rows)
+      }
+
     }
-
-  }
-
-
-  /**
-   * 
-   * MAKE TABLE
-   * 
-   */
-  // https://jsfiddle.net/rh5aoxsL/
-  function makeTable(data, tableInfo = false) {
-    // console.log('makeTable', data)
-    // create table
-    const table = document.createElement("table");
-    table.classList.add('dataTable')
-    // create THead  & TBody
-    const tableHead = table.createTHead();
-    const tableContent = table.createTBody();
-    tableContent.id = "table-content"
-    // append table to DOM 
-    document.querySelector('article').appendChild(table)
-
-    makeTableHead(data);
-    makeNewRow(data);
-    makeTableBody(data);
-    makeSort(data);
-
-    tableContent.onkeydown = keyOnTable;
 
 
 
     /**
      * 
-     * MAKE NEW ROW DIALOG
+     * MAKE INPUT FIELDS EDITABLE
      * 
      */
-    function makeNewRow(data) {
-      document.querySelector('#newRow form').innerHTML = '';
-
-      const objKeys = Object.keys(data[0]);
-      objKeys.map((key) => {
-        if (key !== 'id') {
-
-          const label = document.createElement("label");
-          label.innerHTML = key;
-
-          const input = document.createElement("input");
-          if (key === 'date') {
-            let datetime = new Date().toISOString().slice(0, 19).replace('T', ' ');
-            input.setAttribute("value", datetime);
-          }
-          input.setAttribute("type", 'text');
-          input.setAttribute("name", key);
-          input.classList.add(key);
-
-          label.appendChild(input);
-          document.querySelector('#newRow form').appendChild(label);
-
-        }
-      });
-      // submit button for NEW ROW DIALOG
-      const submit = document.createElement("input");
-      submit.setAttribute("type", 'submit');
-      submit.setAttribute("value", 'save');
-      document.querySelector('#newRow form').appendChild(submit);
-    };
-
-    function makeTableHead(data) {
-      const row = document.createElement("tr");
-      const objKeys = Object.keys(data[0]);
-      const cell = document.createElement("th");
-
-      if (!tableInfo) {
-        cell.classList.add('deleteRow');
-        cell.innerHTML = '';
-        row.appendChild(cell);
+    function makeEditable(event) {
+      // console.log('makeEditable', event)
+      if (event.target.tagName === 'TD' && event.target.className !== 'deleteRow') {
+        event.preventDefault()
+        focusedCell = event.target
+        focusedCell.setAttribute("contenteditable", true);
+        focusedCell.setAttribute("data-old", focusedCell.innerHTML);
+        focusedCell.focus()
+        focusedCell.addEventListener('focusout', updateValue, true)
+        focusedCell.addEventListener('keydown', updateValueOnEnter, true)
       }
-
-      objKeys.map((key) => {
-        const cell = document.createElement("th");
-        cell.setAttribute("data-attr", key);
-        cell.classList.add(key);
-        cell.id = key;
-        cell.innerHTML = key;
-        row.appendChild(cell);
-      });
-      tableHead.appendChild(row);
-    };
-
-
-
-    function makeTableBody(data) {
-      data.map((obj) => {
-        const row = createRow(obj);
-        tableContent.appendChild(row);
-      });
-    };
-
-    function createRow(obj) {
-      const row = document.createElement("tr");
-      const objKeys = Object.keys(obj);
-      const id = obj['id']
-
-      const cell = document.createElement("td");
-      if (!tableInfo) {
-        cell.setAttribute("data-id", id);
-        cell.classList.add('deleteRow');
-        cell.innerHTML = 'x';
-        row.appendChild(cell);
-      }
-
-      objKeys.map((key) => {
-        const cell = document.createElement("td");
-        cell.setAttribute("data-database", DBobject.database);
-        cell.setAttribute("data-table", DBobject.table);
-        cell.setAttribute("data-id", id);
-        cell.setAttribute("data-attr", key);
-        cell.classList.add(key);
-        cell.innerHTML = obj[key];
-        row.appendChild(cell);
-      });
-      return row;
-    };
-
-
-    function makeSort(data) {
-      const tableButtons = document.querySelectorAll("th");
-      [...tableButtons].map((button) => {
-        button.addEventListener("click", (e) => {
-          resetButtons(e);
-          if (e.target.getAttribute("data-dir") == "desc") {
-            sortData(data, e.target.id, "desc");
-            e.target.setAttribute("data-dir", "asc");
-          } else {
-            sortData(data, e.target.id, "asc");
-            e.target.setAttribute("data-dir", "desc");
-          }
-        });
-      });
-
-
-      function sortData(data, param, direction = "asc") {
-        tableContent.innerHTML = '';
-        const sortedData =
-          direction == "asc" ? [...data].sort(function(a, b) {
-            if (a[param] < b[param]) {
-              return -1;
-            }
-            if (a[param] > b[param]) {
-              return 1;
-            }
-            return 0;
-          }) : [...data].sort(function(a, b) {
-            if (b[param] < a[param]) {
-              return -1;
-            }
-            if (b[param] > a[param]) {
-              return 1;
-            }
-            return 0;
-          });
-
-        makeTableBody(sortedData);
-      };
-
-      const resetButtons = (event) => {
-        [...tableButtons].map((button) => {
-          if (button !== event.target) {
-            button.removeAttribute("data-dir");
-          }
-        });
-      };
     }
-  }
+
+    /**
+     * 
+     * SET FOCUS ON CLICKED CELL
+     * 
+     */
+    function setFocusOnCell(event) {
+      // console.log('setFocusOnCell', event.target)
+      if (event.target.tagName === 'TD' && event.target.className !== 'deleteRow') {
+        event.preventDefault()
+        focusedCell = event.target
+        focusedCell.tabIndex = 3;
+        focusedCell.focus();
+      }
+    }
+
+
+
+
+    function keyOnTableStyling(sibling) {
+      if (sibling != null) {
+        focusedCell.focus();
+        focusedCell.tabIndex = -1;
+        sibling.focus();
+        sibling.tabIndex = 3;
+        focusedCell = sibling;
+      }
+    }
+
+
+    function keyOnTable(e) {
+      e = e || window.event;
+      // console.log('keyOnTable e.keyCode', e.keyCode)
+      if (e.target.contentEditable !== 'true') {
+        if (e.keyCode == '38') {
+          // up arrow
+          var idx = focusedCell.cellIndex;
+          var nextrow = focusedCell.parentElement.previousElementSibling;
+          if (nextrow != null) {
+            var sibling = nextrow.cells[idx];
+            keyOnTableStyling(sibling);
+          }
+        } else if (e.keyCode == '40') {
+          // down arrow
+          var idx = focusedCell.cellIndex;
+          var nextrow = focusedCell.parentElement.nextElementSibling;
+          if (nextrow != null) {
+            var sibling = nextrow.cells[idx];
+            keyOnTableStyling(sibling);
+          }
+        } else if (e.keyCode == '37') {
+          // left arrow
+          var sibling = focusedCell.previousElementSibling;
+          keyOnTableStyling(sibling);
+        } else if (e.keyCode == '39') {
+          // right arrow
+          var sibling = focusedCell.nextElementSibling;
+          keyOnTableStyling(sibling);
+        } else if (e.keyCode == '32') {
+          // space
+          makeEditable(e)
+        }
+        e.preventDefault()
+      }
+
+    }
+
+
+    /**
+     * 
+     * MAKE TABLE
+     * 
+     */
+    // https://jsfiddle.net/rh5aoxsL/
+    function makeTable(data, tableInfo = false) {
+      // console.log('makeTable', data)
+      // create table
+      const table = document.createElement("table");
+      table.classList.add('dataTable')
+      // create THead  & TBody
+      const tableHead = table.createTHead();
+      const tableContent = table.createTBody();
+      tableContent.id = "table-content"
+      // append table to DOM 
+      document.querySelector('article').appendChild(table)
+
+      makeTableHead(data);
+      makeNewRow(data);
+      makeTableBody(data);
+      makeSort(data);
+
+      tableContent.onkeydown = keyOnTable;
+
+
+
+      /**
+       * 
+       * MAKE NEW ROW DIALOG
+       * 
+       */
+      function makeNewRow(data) {
+        document.querySelector('#newRow form').innerHTML = '';
+
+        const objKeys = Object.keys(data[0]);
+        objKeys.map((key) => {
+          if (key !== 'id') {
+
+            const label = document.createElement("label");
+            label.innerHTML = key;
+
+            const input = document.createElement("input");
+            if (key === 'date') {
+              let datetime = new Date().toISOString().slice(0, 19).replace('T', ' ');
+              input.setAttribute("value", datetime);
+            }
+            input.setAttribute("type", 'text');
+            input.setAttribute("name", key);
+            input.classList.add(key);
+
+            label.appendChild(input);
+            document.querySelector('#newRow form').appendChild(label);
+
+          }
+        });
+        // submit button for NEW ROW DIALOG
+        const submit = document.createElement("input");
+        submit.setAttribute("type", 'submit');
+        submit.setAttribute("value", 'save');
+        document.querySelector('#newRow form').appendChild(submit);
+      };
+
+      function makeTableHead(data) {
+        const row = document.createElement("tr");
+        const objKeys = Object.keys(data[0]);
+        const cell = document.createElement("th");
+
+        if (!tableInfo) {
+          cell.classList.add('deleteRow');
+          cell.innerHTML = '';
+          row.appendChild(cell);
+        }
+
+        objKeys.map((key) => {
+          const cell = document.createElement("th");
+          cell.setAttribute("data-attr", key);
+          cell.classList.add(key);
+          cell.id = key;
+          cell.innerHTML = key;
+          row.appendChild(cell);
+        });
+        tableHead.appendChild(row);
+      };
+
+
+
+      function makeTableBody(data) {
+        data.map((obj) => {
+          const row = createRow(obj);
+          tableContent.appendChild(row);
+        });
+      };
+
+      function createRow(obj) {
+        const row = document.createElement("tr");
+        const objKeys = Object.keys(obj);
+        const id = obj['id']
+
+        const cell = document.createElement("td");
+        if (!tableInfo) {
+          cell.setAttribute("data-id", id);
+          cell.classList.add('deleteRow');
+          cell.innerHTML = 'x';
+          row.appendChild(cell);
+        }
+
+        objKeys.map((key) => {
+          const cell = document.createElement("td");
+          cell.setAttribute("data-database", DBobject.database);
+          cell.setAttribute("data-table", DBobject.table);
+          cell.setAttribute("data-id", id);
+          cell.setAttribute("data-attr", key);
+          cell.classList.add(key);
+          cell.innerHTML = obj[key];
+          row.appendChild(cell);
+        });
+        return row;
+      };
+
+
+      function makeSort(data) {
+        const tableButtons = document.querySelectorAll("th");
+        [...tableButtons].map((button) => {
+          button.addEventListener("click", (e) => {
+            resetButtons(e);
+            if (e.target.getAttribute("data-dir") == "desc") {
+              sortData(data, e.target.id, "desc");
+              e.target.setAttribute("data-dir", "asc");
+            } else {
+              sortData(data, e.target.id, "asc");
+              e.target.setAttribute("data-dir", "desc");
+            }
+          });
+        });
+
+
+        function sortData(data, param, direction = "asc") {
+          tableContent.innerHTML = '';
+          const sortedData =
+            direction == "asc" ? [...data].sort(function (a, b) {
+              if (a[param] < b[param]) {
+                return -1;
+              }
+              if (a[param] > b[param]) {
+                return 1;
+              }
+              return 0;
+            }) : [...data].sort(function (a, b) {
+              if (b[param] < a[param]) {
+                return -1;
+              }
+              if (b[param] > a[param]) {
+                return 1;
+              }
+              return 0;
+            });
+
+          makeTableBody(sortedData);
+        };
+
+        const resetButtons = (event) => {
+          [...tableButtons].map((button) => {
+            if (button !== event.target) {
+              button.removeAttribute("data-dir");
+            }
+          });
+        };
+      }
+    }
   </script>
 
 </body>
