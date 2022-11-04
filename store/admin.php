@@ -109,7 +109,13 @@ if (isset($_GET['getTableInfo'])) {
   ];
 }
 
-
+if (isset($_GET['saveNewTable'])) {
+  // pprint($request);
+  $response = [
+    'API' => true,
+    'message' => saveNewTable(),
+  ];
+}
 
 
 
@@ -136,7 +142,12 @@ if ($response['API'] === true) {
 /////////////////////////////////    PHP    FUNCTIONS    ///////////////////////////
 /////////////////////////////////    PHP    FUNCTIONS    ///////////////////////////
 
-
+function saveNewTable(){
+    global $request, $dbFolder;
+  pprint($request);
+  $database = $request['database'];
+  $data = $request['data'];
+}
 
 function getTableInfo() {
   global $request, $dbFolder;
@@ -553,6 +564,7 @@ function getDatabases() {
     list-style-type: none;
   }
 
+  select,
   input {
     font-size: 1rem;
     color: var(--text-color);
@@ -747,6 +759,7 @@ function getDatabases() {
     max-width: 250px;
   }
 
+  #newTable,
   #newDatabase,
   #newRow {
     position: absolute;
@@ -764,6 +777,12 @@ function getDatabases() {
     top: -10vh;
   }
 
+  #newTable {
+    width: 600px;
+    left: calc(50% - 200px);
+  }
+
+  #newTable.open,
   #newDatabase.open,
   #newRow.open {
     opacity: 1;
@@ -771,6 +790,7 @@ function getDatabases() {
     top: var(--header-height);
   }
 
+  #newTable h3,
   #newDatabase h3,
   #newRow h3 {
     position: relative;
@@ -780,6 +800,7 @@ function getDatabases() {
     color: var(--yellow);
   }
 
+  #newTable h3 #closeNewTableBtn,
   #newDatabase h3 #closeNewDatabaseBtn,
   #newRow h3 #closeNewRowBtn {
     background-image: var(--icon-close);
@@ -793,11 +814,13 @@ function getDatabases() {
     right: -.5rem;
   }
 
+  #newTable h3 #closeNewTableBtn:hover,
   #newDatabase h3 #closeNewDatabaseBtn:hover,
   #newRow h3 #closeNewRowBtn:hover {
     color: var(--red);
   }
 
+  #newTable form,
   #newDatabase form,
   #newRow form {
     display: flex;
@@ -810,6 +833,13 @@ function getDatabases() {
     margin-bottom: 1rem;
   }
 
+  #newTable form input,
+  #newTable form select {
+    width: 100%;
+    margin-bottom: .5rem;
+  }
+
+  #newTable form input[type=submit],
   #newDatabase form input[type=submit],
   #newRow form input[type=submit] {
     cursor: pointer;
@@ -825,6 +855,16 @@ function getDatabases() {
 
   #newRow form input[type=submit]:hover {
     background-color: #ddd;
+  }
+
+  #addColumnBtn {
+    cursor: pointer;
+    color: var(--yellow);
+    margin-left: 1rem;
+  }
+
+  #addColumnBtn:hover {
+    color: var(--red);
   }
 
   #confirmBox {
@@ -848,11 +888,9 @@ function getDatabases() {
   }
 
   #confirmBox.open {
-
     opacity: 1;
     visibility: visible;
     top: 0;
-
   }
 
   #confirmBox button {
@@ -1010,6 +1048,33 @@ function getDatabases() {
     </form>
   </div>
 
+  <div id="newTable" class="open">
+    <h3>add new Table <span id="closeNewTableBtn"></span></h3>
+    <form class="saveNewTable" onsubmit="return saveNewTable(event)">
+      <label style="display: inline-flex;gap: 1rem;">Tablename
+        <input type="text" name="tablename">
+      </label>
+      <hr style="width:100%">
+
+      <label>Columns<span id=addColumnBtn>+</span></label>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Null</th>
+            <th>Default</th>
+          </tr>
+        </thead>
+        <tbody id=newTableTable>
+        </tbody>
+
+      </table>
+      <input type="submit" value="save">
+    </form>
+  </div>
+
 
   <!-- 
   //  
@@ -1036,6 +1101,11 @@ function getDatabases() {
   const openNewRowBtn = document.querySelector('#openNewRowBtn')
   const closeNewDatabaseBtn = document.querySelector('#closeNewDatabaseBtn')
   const openNewDatabaseBtn = document.querySelector('#openNewDatabaseBtn')
+  const closeNewTableBtn = document.querySelector('#closeNewTableBtn')
+  const openNewTableBtn = document.querySelector('#openNewTableBtn')
+  const addColumnBtn = document.querySelector('#addColumnBtn')
+
+
   const sidebarCKB = document.querySelector('#sidebarCKB')
 
 
@@ -1054,6 +1124,9 @@ function getDatabases() {
   openNewRowBtn.addEventListener('click', toggleNewRow)
   closeNewDatabaseBtn.addEventListener('click', toggleNewDatabase)
   openNewDatabaseBtn.addEventListener('click', toggleNewDatabase)
+  closeNewTableBtn.addEventListener('click', toggleNewTable)
+  openNewTableBtn.addEventListener('click', toggleNewTable)
+  addColumnBtn.addEventListener('click', addColumn)
 
   function logOut() {
     window.localStorage.setItem('DBEPW', '')
@@ -1132,9 +1205,96 @@ function getDatabases() {
     document.querySelector('#newDatabase').classList.toggle('open');
   }
 
+  function toggleNewTable() {
+    document.querySelector('#newTable').classList.toggle('open');
+  }
 
 
+  /**
+   * 
+   * SAVE NEW TABLE
+   * 
+   */
+  function saveNewTable(event) {
+    event.preventDefault()
+    // let form = document.querySelector('form.saveNewTable')
+    // let formData = new FormData(form);
+    // const plainFormData = Object.fromEntries(formData.entries());
+    // console.log('formData', formData)
+    // console.log('plainFormData', plainFormData)
 
+    let table = document.querySelector('#newTableTable')
+    console.log('table', table)
+        const data =  new FormData();
+
+        let rows = table.querySelectorAll('tr')
+        rows.forEach(row =>{
+          console.log(row)
+
+          for (let item of row.childNodes) {
+    console.log(item);
+}
+ 
+
+
+        })
+
+
+   
+    console.log(data)
+    fetch('admin.php?saveNewTable', {
+        method: 'POST',
+        mode: "same-origin",
+        credentials: "same-origin",
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          password: DBobject.password,
+          database: DBobject.database,
+          data: plainFormData
+        })
+
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log(data)
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+
+  }
+
+  /** 
+   * 
+   * ADD COLUMN
+   * 
+   */
+  function addColumn() {
+    let table = document.querySelector('#newTableTable')
+    let i = table.children.length
+        let cells = `<td><input type="text" name="data[${i}][name]"></td>
+                <td><select name="data[${i}][type]">
+                <option value="TEXT">TEXT</option>
+                <option value="FLOAT">FLOAT</option>
+                </select>
+                </td>
+                <td><input type="text" name="data[${i}][null]"></td>
+                <td><input type="text" name="data[${i}][default]"></td>`
+    // let cells = `<td><input type="text" name="name[]"></td>
+    //             <td><select name="type[]">
+    //             <option value="TEXT">TEXT</option>
+    //             <option value="FLOAT">FLOAT</option>
+    //             </select>
+    //             </td>
+    //             <td><input type="text" name="null[]"></td>
+    //             <td><input type="text" name="defa[]"></td>`
+    let row = document.createElement('tr')
+    row.innerHTML = cells
+    table.appendChild(row);
+  }
 
 
   /**
@@ -1290,9 +1450,7 @@ function getDatabases() {
   function saveNewDatabase(event) {
     event.preventDefault()
     let databaseName = document.querySelector('form.saveNewDatabase')[0].value
-    console.log(databaseName)
-
-
+    // console.log(databaseName)
     fetch(`admin.php?saveNewDatabase`, {
         method: 'POST',
         mode: "same-origin",
@@ -1587,7 +1745,6 @@ function getDatabases() {
           DBobject.login = true
           DBobject.data.databases = data.data.databases
           document.querySelector('.showDatabase').innerHTML = 'choose database'
-          // document.querySelector('article').innerHTML = ''
           refresh();
         } else {
           wrongPW.innerHTML = 'Password incorrect'
@@ -1610,25 +1767,22 @@ function getDatabases() {
 
     // DEBUG element
     document.querySelector('#DBobject').innerHTML = `<li>${DBobject.database}</li><li>${DBobject.table}</li>`
-    console.log(DBobject)
+    // console.log(DBobject)
 
     // LOGIN
     if (DBobject.login) {
       document.querySelector('.newList').style.display = 'block'
+      document.querySelector('article').innerHTML = ''
     } else {
       document.querySelector('.newList').style.display = 'none'
     }
 
-
     // DATABASE
     if (DBobject.database) {
       document.querySelector('#openNewTableBtn').style.display = 'block'
-
     } else {
       document.querySelector('#openNewTableBtn').style.display = 'none'
-
     }
-
 
     // TABLE
     if (DBobject.table) {
@@ -1646,11 +1800,7 @@ function getDatabases() {
       let DB = '';
       DBobject.data.databases.forEach(el => {
         DB += `<li>
-                  <!--
-                    <span class="getDatabaseInfo iInfo" title="Database Info" data-file=${el.file}>
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -5 420 755"><path d="m 290 100 a 90 90 90 1 1 -190 0 a 90 90 90 1 1 190 0 z m 20 550 c 0 30 10 40 40 40 l 50 0 v 50 h -390 v -50 l 60 0 c 30 0 40 -10 40 -40 v -310 c 0 -50 -60 -40 -110 -40 v -50 l 310 0 z"/></svg> 
-                    </span>
-                    -->          
+                  <!--<span class="getDatabaseInfo iInfo" title="Database Info" data-file=${el.file}><svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -5 420 755"><path d="m 290 100 a 90 90 90 1 1 -190 0 a 90 90 90 1 1 190 0 z m 20 550 c 0 30 10 40 40 40 l 50 0 v 50 h -390 v -50 l 60 0 c 30 0 40 -10 40 -40 v -310 c 0 -50 -60 -40 -110 -40 v -50 l 310 0 z"/></svg> </span>-->          
                     <a class="getTables" href="#" data-file=${el.file}>${el.name}</a>
                 </li>`
       });
@@ -1667,9 +1817,7 @@ function getDatabases() {
       let TAB = '';
       DBobject.data.tables.forEach(el => {
         TAB += `<li>
-                    <span class="getTableInfo iInfo" title="Table Info" data-table=${el.name}>
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -5 420 755"><path d="m 290 100 a 90 90 90 1 1 -190 0 a 90 90 90 1 1 190 0 z m 20 550 c 0 30 10 40 40 40 l 50 0 v 50 h -390 v -50 l 60 0 c 30 0 40 -10 40 -40 v -310 c 0 -50 -60 -40 -110 -40 v -50 l 310 0 z"/></svg> 
-                    </span>
+                    <span class="getTableInfo iInfo" title="Table Info" data-table=${el.name}><svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -5 420 755"><path d="m 290 100 a 90 90 90 1 1 -190 0 a 90 90 90 1 1 190 0 z m 20 550 c 0 30 10 40 40 40 l 50 0 v 50 h -390 v -50 l 60 0 c 30 0 40 -10 40 -40 v -310 c 0 -50 -60 -40 -110 -40 v -50 l 310 0 z"/></svg> </span>
                     <a class="getRows" href="#" data-database=${el.database} data-table=${el.name}>${el.name}</a>
                 </li>`
       });
